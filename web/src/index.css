@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #eceff1;
+  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+}
+
+/* Custom map background styles */
+.map-bg-pattern {
+  background-color: #e5e3df;
+  background-image: linear-gradient(#d7d5d1 2px, transparent 2px), linear-gradient(90deg, #d7d5d1 2px, transparent 2px);
+  background-size: 40px 40px;
+}
