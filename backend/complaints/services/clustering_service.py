@@ -84,7 +84,7 @@ def cluster_and_weight_complaint(
         matched_cluster = ComplaintCluster.objects.create(
             title=title,
             department=complaint.department,
-            campus_zone=complaint.campus_zone or complaint.address or "Campus Area",
+            campus_zone=complaint.campus_zone or complaint.address or "Main Campus",
             latitude=complaint.latitude,
             longitude=complaint.longitude,
             base_severity=complaint.initial_severity,

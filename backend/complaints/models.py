@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.conf import settings
 
 class DepartmentType(models.TextChoices):
     PLUMBING = 'PLUMBING', 'Plumbing & Water Supply'
@@ -40,7 +41,7 @@ class ComplaintCluster(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
     department = models.CharField(max_length=50, choices=DepartmentType.choices, default=DepartmentType.GENERAL)
-    campus_zone = models.CharField(max_length=150, blank=True, default='', help_text="e.g. Hostel Block B, Library, Cafeteria")
+    campus_zone = models.CharField(max_length=150, blank=True, default='Main Campus', help_text="e.g. Hostel Block B, Library, Cafeteria")
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
     
@@ -64,6 +65,13 @@ class ComplaintCluster(models.Model):
 class Complaint(models.Model):
     """Individual civic issue report submitted by a citizen / student."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="complaints",
+    )
     user_identifier = models.CharField(max_length=255, blank=True, default='anonymous_user')
     user_trust_score = models.FloatField(default=1.0, help_text="User reputation score (0.0 to 1.0)")
     
@@ -76,7 +84,7 @@ class Complaint(models.Model):
     # Location & Campus Zone
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    campus_zone = models.CharField(max_length=150, blank=True, default='', help_text="Building or Zone Name")
+    campus_zone = models.CharField(max_length=150, blank=True, default='Main Campus', help_text="Building or Zone Name")
     address = models.CharField(max_length=500, blank=True, default='')
 
     # AI Triage & CV Results (flat fields)
@@ -118,3 +126,15 @@ class Complaint(models.Model):
 
     def __str__(self):
         return f"Report #{str(self.id)[:8]} - {self.department} ({self.status})"
+
+class Notification(models.Model):
+    user_identifier = models.CharField(max_length=255)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user_identifier}: {self.message[:20]}"
