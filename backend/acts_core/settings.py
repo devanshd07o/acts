@@ -61,24 +61,57 @@ TEMPLATES = [
 WSGI_APPLICATION = 'acts_core.wsgi.application'
 ASGI_APPLICATION = 'acts_core.asgi.application'
 
-# Database Configuration (PostgreSQL if env vars present, else fallback to SQLite)
-DB_NAME = os.getenv('DB_NAME')
-if DB_NAME:
+# Database Configuration (PostGIS / PostgreSQL matching Docker container)
+DB_NAME = os.getenv('DB_NAME', 'acts_db')
+DB_USER = os.getenv('DB_USER', 'acts_user')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'acts_secret_password')
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+
+# PostGIS engine configuration
+# Checks if native GDAL C-library is present on the OS (e.g., in PostGIS Docker container)
+# Falls back to standard PostgreSQL backend if GDAL is not installed locally on Windows
+try:
+    from django.contrib.gis.db.backends.postgis.base import DatabaseWrapper
+    _GIS_AVAILABLE = True
+except Exception:
+    _GIS_AVAILABLE = False
+
+_DEFAULT_ENGINE = 'django.contrib.gis.db.backends.postgis' if _GIS_AVAILABLE else 'django.db.backends.postgresql'
+DB_ENGINE = os.getenv('DB_ENGINE', _DEFAULT_ENGINE)
+
+def _is_pg_reachable(host, port):
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.3)
+        ok = (s.connect_ex((host, int(port))) == 0)
+        s.close()
+        return ok
+    except Exception:
+        return False
+
+# Use SQLite if explicitly requested OR if Postgres/PostGIS service is currently offline
+_use_sqlite = os.getenv('USE_SQLITE', '').lower() in ('true', '1') or DB_ENGINE == 'django.db.backends.sqlite3'
+if not _use_sqlite and not _is_pg_reachable(DB_HOST, DB_PORT) and os.getenv('USE_SQLITE') != 'False':
+    _use_sqlite = True
+
+if _use_sqlite:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': DB_NAME,
-            'USER': os.getenv('DB_USER', 'acts_user'),
-            'PASSWORD': os.getenv('DB_PASSWORD', 'acts_password'),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '5432'),
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': DB_ENGINE,
+            'NAME': DB_NAME,
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
         }
     }
 
@@ -113,9 +146,21 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser',
         'rest_framework.parsers.FormParser',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '120/minute',
+        'user': '300/minute',
+    },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
+
+# Upload Limits & Security
+DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB
 
 from datetime import timedelta
 SIMPLE_JWT = {

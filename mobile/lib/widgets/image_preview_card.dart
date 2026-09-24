@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../config/theme.dart';
 
 class ImagePreviewCard extends StatelessWidget {
-  final File? imageFile;
+  final XFile? imageFile;
   final String? networkUrl;
   final VoidCallback? onRemove;
 
@@ -29,9 +29,12 @@ class ImagePreviewCard extends StatelessWidget {
             width: double.infinity,
             color: Colors.grey[200],
             child: imageFile != null
-                ? Image.file(
-                    imageFile!,
+                ? Image.network(
+                    imageFile!.path,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Center(
+                      child: Icon(Icons.broken_image, size: 48, color: AppTheme.textMuted),
+                    ),
                   )
                 : Image.network(
                     networkUrl!,

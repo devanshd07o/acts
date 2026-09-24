@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../config/theme.dart';
 import '../../config/app_routes.dart';
 import '../../services/api_client.dart';
@@ -20,9 +20,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _zoneController = TextEditingController();
 
-  File? _selectedImage;
-  double _latitude = 28.6139;
-  double _longitude = 77.2090;
+  XFile? _selectedImage;
+  double _latitude = 28.6692;
+  double _longitude = 77.4538;
   bool _isLoading = false;
   bool _isFetchingLocation = false;
 
@@ -30,6 +30,13 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   void initState() {
     super.initState();
     _fetchGPS();
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _zoneController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchGPS() async {

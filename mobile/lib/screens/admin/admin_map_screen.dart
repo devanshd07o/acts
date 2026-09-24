@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../config/app_routes.dart';
 import '../../config/theme.dart';
 import '../../models/map_marker_model.dart';
 import '../../services/api_client.dart';
@@ -30,16 +29,42 @@ class _AdminMapScreenState extends State<AdminMapScreen> {
     setState(() => _isLoading = true);
     try {
       final markers = await _apiClient.fetchMapMarkers();
+      if (!mounted) return;
       setState(() {
         _markers = markers;
       });
+      _fitMapToMarkers();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load map markers: $e')),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+
+  void _fitMapToMarkers() {
+    if (_markers.isEmpty) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final points = _markers.map((m) => LatLng(m.latitude, m.longitude)).toList();
+      if (points.length == 1) {
+        _mapController.move(points.first, 15.0);
+      } else {
+        final bounds = LatLngBounds.fromPoints(points);
+        _mapController.fitCamera(
+          CameraFit.bounds(
+            bounds: bounds,
+            padding: const EdgeInsets.all(60),
+            maxZoom: 16.0,
+          ),
+        );
+      }
+    });
   }
 
   void _showCampusHealthModal() async {
@@ -91,9 +116,18 @@ class _AdminMapScreenState extends State<AdminMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    LatLng initialCenter = _markers.isNotEmpty
-        ? LatLng(_markers.first.latitude, _markers.first.longitude)
-        : const LatLng(28.6139, 77.2090);
+    LatLng initialCenter;
+    if (_markers.isNotEmpty) {
+      double sumLat = 0;
+      double sumLng = 0;
+      for (var m in _markers) {
+        sumLat += m.latitude;
+        sumLng += m.longitude;
+      }
+      initialCenter = LatLng(sumLat / _markers.length, sumLng / _markers.length);
+    } else {
+      initialCenter = const LatLng(28.6692, 77.4538);
+    }
 
     return Scaffold(
       appBar: AppBar(

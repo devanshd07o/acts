@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
-import '../../config/app_routes.dart';
 import '../../models/complaint_model.dart';
 import '../../services/api_client.dart';
 import '../../widgets/severity_badge.dart';
@@ -55,30 +54,46 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await _apiClient.confirmResolution(
-                complaintId: complaint.id,
-                isConfirmed: false,
-                feedback: feedbackController.text.trim(),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Issue marked as not fixed. Ticket reopened!')),
-              );
-              _refresh();
+              try {
+                await _apiClient.confirmResolution(
+                  complaintId: complaint.id,
+                  isConfirmed: false,
+                  feedback: feedbackController.text.trim(),
+                );
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Issue marked as not fixed. Ticket reopened!')),
+                );
+                _refresh();
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to update status: $e'), backgroundColor: Colors.red),
+                );
+              }
             },
             child: const Text('NO, REOPEN', style: TextStyle(color: Colors.red)),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await _apiClient.confirmResolution(
-                complaintId: complaint.id,
-                isConfirmed: true,
-                feedback: feedbackController.text.trim(),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Thank you! Resolution confirmed and ticket closed.')),
-              );
-              _refresh();
+              try {
+                await _apiClient.confirmResolution(
+                  complaintId: complaint.id,
+                  isConfirmed: true,
+                  feedback: feedbackController.text.trim(),
+                );
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Thank you! Resolution confirmed and ticket closed.')),
+                );
+                _refresh();
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to update status: $e'), backgroundColor: Colors.red),
+                );
+              }
             },
             child: const Text('YES, CONFIRM FIX'),
           ),

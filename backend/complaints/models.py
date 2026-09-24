@@ -75,18 +75,27 @@ class Complaint(models.Model):
     user_identifier = models.CharField(max_length=255, blank=True, default='anonymous_user')
     user_trust_score = models.FloatField(default=1.0, help_text="User reputation score (0.0 to 1.0)")
     
-    # Text Description & Optional Media
-    raw_text = models.TextField(help_text="Plain-text problem description in user's own words")
+    # Writable user inputs
+    citizen_description = models.TextField(blank=True, default='', help_text="Plain-text problem description in user's own words")
+    raw_text = models.TextField(blank=True, default='', help_text="Plain-text problem description in user's own words")
     image = models.ImageField(upload_to='uploads/%Y/%m/%d/', blank=True, null=True)
     compressed_image = models.ImageField(upload_to='uploads/compressed/%Y/%m/%d/', blank=True, null=True)
 
     # Location & Campus Zone
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     campus_zone = models.CharField(max_length=150, blank=True, default='Main Campus', help_text="Building or Zone Name")
     address = models.CharField(max_length=500, blank=True, default='')
 
-    # AI Triage & CV Results
+    # AI Triage & CV Results (flat fields)
+    detected_class = models.CharField(max_length=100, blank=True, default='')
+    yolo_confidence = models.FloatField(null=True, blank=True, default=0.0)
+    severity_score = models.IntegerField(default=5, help_text="AI estimated severity 1-10")
+    assigned_department = models.CharField(max_length=50, choices=DepartmentType.choices, default=DepartmentType.GENERAL)
+    is_emergency = models.BooleanField(default=False)
+    ai_summary = models.TextField(blank=True, default='')
+
+    # AI Triage & CV Results (JSON & metrics)
     department = models.CharField(max_length=50, choices=DepartmentType.choices, default=DepartmentType.GENERAL)
     initial_severity = models.IntegerField(default=5, help_text="AI estimated severity 1-10")
     blur_score = models.FloatField(default=0.0)
