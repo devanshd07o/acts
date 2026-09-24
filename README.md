@@ -4,9 +4,22 @@ ACTS is an AI and Computer Vision powered civic complaint reporting and triage p
 
 ---
 
+## 🧠 Core AI Workflow
+
+ACTS eliminates manual sorting of civic complaints by utilizing an agentic pipeline:
+1. **Report Generation:** Citizens capture geo-tagged images of civic issues (potholes, broken streetlights, illegal dumping) via the cross-platform Flutter app.
+2. **Defect Detection (CV):** OpenCV and YOLO validate the image quality and detect primary objects/defects in the frame.
+3. **Multimodal Triage (Gemini AI):** The Gemini API analyzes the image and text context to:
+   * Verify the authenticity of the civic issue.
+   * Assign a **Severity Score (1-10)** based on public safety risk and infrastructure damage.
+   * Cluster duplicate reports from the same geographic zone.
+4. **Command Center:** The admin dashboard visualizes live, crowd-weighted clusters on an interactive map, allowing authorities to dispatch maintenance crews efficiently.
+
+---
+
 ## 📁 Repository Structure
 
-```
+```text
 acts-project/
 ├── .gitignore
 ├── README.md
@@ -56,7 +69,7 @@ acts-project/
         ├── main.dart               # App entry point & initialization
         │
         ├── config/
-        │   ├── api_constants.dart  # Base URLs (e.g., 10.0.2.2:8000 for emulator)
+        │   ├── api_constants.dart  # Base URLs (Dynamic routing for web/emulator/iOS)
         │   ├── app_routes.dart     # Navigation routing
         │   └── theme.dart          # App colors and styling
         │
@@ -65,7 +78,7 @@ acts-project/
         │   └── map_marker_model.dart
         │
         ├── services/
-        │   ├── api_client.dart     # Dio/Http multipart upload & fetch methods
+        │   ├── api_client.dart     # Dio multipart upload, error handling & dynamic IPs
         │   ├── location_service.dart # Geolocator hardware GPS extraction
         │   └── camera_service.dart # Image picker & gallery access
         │
@@ -88,13 +101,20 @@ acts-project/
 
 ## 🚀 Quickstart Guide
 
-### Backend Setup (Django & AI Services)
+### Backend Setup (Dockerized)
 
-1. Navigate to backend directory:
+The Django API, AI services, and PostgreSQL database are fully containerized. You do not need Python or PostgreSQL installed locally.
+
+1. In the root directory, create a `.env` file and add your Gemini API key:
+   ```env
+   GEMINI_API_KEY=your_actual_api_key_here
+
+
+2. Navigate to backend directory:
    ```bash
    cd backend
    ```
-2. Create & activate a virtual environment:
+3. Create & activate a virtual environment:
    ```bash
    python -m venv venv
    # Windows:
@@ -102,15 +122,15 @@ acts-project/
    # Linux/macOS:
    source venv/bin/activate
    ```
-3. Install dependencies:
+4. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-4. Configure `.env` from `.env.example`:
+5. Configure `.env` from `.env.example`:
    ```bash
    cp .env.example .env
    ```
-5. Apply migrations and start the development server:
+6. Apply migrations and start the development server:
    ```bash
    python manage.py makemigrations
    python manage.py migrate
