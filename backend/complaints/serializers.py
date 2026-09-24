@@ -33,6 +33,9 @@ class ComplaintClusterSerializer(serializers.ModelSerializer):
         ]
 
     def get_preview_complaint_id(self, obj):
+        if hasattr(obj, '_prefetched_objects_cache') and 'reports' in obj._prefetched_objects_cache:
+            reports = obj.reports.all()
+            return str(reports[0].id) if len(reports) > 0 else None
         first_comp = obj.reports.first()
         return str(first_comp.id) if first_comp else None
 
@@ -40,26 +43,30 @@ class ComplaintClusterSerializer(serializers.ModelSerializer):
 class ComplaintSerializer(serializers.ModelSerializer):
     """
     ModelSerializer for Complaint model.
-    Writable user inputs: image, latitude, longitude, citizen_description.
+    Writable user inputs: image, citizen_description, latitude, longitude (and raw_text, campus_zone, address).
     Strictly read-only AI-generated fields: detected_class, yolo_confidence, severity_score, assigned_department, is_emergency, ai_summary.
     """
-    citizen_description = serializers.CharField(source='raw_text', required=False, allow_blank=True)
-    
-    detected_class = serializers.SerializerMethodField(read_only=True)
-    yolo_confidence = serializers.SerializerMethodField(read_only=True)
-    severity_score = serializers.SerializerMethodField(read_only=True)
-    assigned_department = serializers.CharField(source='department', read_only=True)
-    is_emergency = serializers.SerializerMethodField(read_only=True)
-    ai_summary = serializers.SerializerMethodField(read_only=True)
+    user = serializers.ReadOnlyField(source='user.username')
+    citizen_description = serializers.CharField(required=False, allow_blank=True)
+    raw_text = serializers.CharField(required=False, allow_blank=True)
+
+    detected_class = serializers.CharField(read_only=True)
+    yolo_confidence = serializers.FloatField(read_only=True)
+    severity_score = serializers.IntegerField(read_only=True)
+    assigned_department = serializers.CharField(read_only=True)
+    is_emergency = serializers.BooleanField(read_only=True)
+    ai_summary = serializers.CharField(read_only=True)
 
     class Meta:
         model = Complaint
         fields = [
             'id',
+            'user',
             'user_identifier',
             'citizen_description',
             'raw_text',
             'image',
+            'compressed_image',
             'latitude',
             'longitude',
             'campus_zone',
@@ -70,56 +77,122 @@ class ComplaintSerializer(serializers.ModelSerializer):
             'assigned_department',
             'is_emergency',
             'ai_summary',
+            'department',
+            'initial_severity',
+            'blur_score',
+            'is_valid_image',
+            'yolo_detections',
+            'gemini_analysis',
             'status',
+            'cluster',
+            'assigned_crew',
+            'is_confirmed_by_reporter',
+            'reporter_feedback',
+            'admin_notes',
             'created_at',
             'updated_at',
         ]
         read_only_fields = [
             'id',
+            'user',
+            'user_identifier',
+            'compressed_image',
             'detected_class',
             'yolo_confidence',
             'severity_score',
             'assigned_department',
             'is_emergency',
             'ai_summary',
+            'department',
+            'initial_severity',
+            'blur_score',
+            'is_valid_image',
+            'yolo_detections',
+            'gemini_analysis',
+            'status',
+            'cluster',
+            'assigned_crew',
+            'is_confirmed_by_reporter',
+            'reporter_feedback',
+            'admin_notes',
             'created_at',
             'updated_at',
         ]
 
-    def get_detected_class(self, obj):
-        if obj.yolo_detections and isinstance(obj.yolo_detections, dict):
-            detections = obj.yolo_detections.get('detections', [])
+    def validate_latitude(self, value):
+        if value is not None and not (-90.0 <= float(value) <= 90.0):
+            raise serializers.ValidationError("Latitude must be between -90.0 and 90.0")
+        return value
+
+    def validate_longitude(self, value):
+        if value is not None and not (-180.0 <= float(value) <= 180.0):
+            raise serializers.ValidationError("Longitude must be between -180.0 and 180.0")
+        return value
+
+    def validate_citizen_description(self, value):
+        if value:
+            if len(value) > 5000:
+                raise serializers.ValidationError("Description exceeds maximum 5000 characters limit.")
+            import html
+            return html.escape(value.strip())
+        return value
+
+    def validate_raw_text(self, value):
+        if value:
+            if len(value) > 5000:
+                raise serializers.ValidationError("Text exceeds maximum 5000 characters limit.")
+            import html
+            return html.escape(value.strip())
+        return value
+
+    def validate_campus_zone(self, value):
+        if value:
+            import html
+            return html.escape(value.strip()[:150])
+        return value
+
+    def validate_address(self, value):
+        if value:
+            import html
+            return html.escape(value.strip()[:500])
+        return value
+
+    def validate(self, attrs):
+        # Sync citizen_description and raw_text
+        if attrs.get('citizen_description') and not attrs.get('raw_text'):
+            attrs['raw_text'] = attrs['citizen_description']
+        elif attrs.get('raw_text') and not attrs.get('citizen_description'):
+            attrs['citizen_description'] = attrs['raw_text']
+        return attrs
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # Fallback for detected_class & confidence if blank in DB column
+        if not ret.get('detected_class') and instance.yolo_detections and isinstance(instance.yolo_detections, dict):
+            detections = instance.yolo_detections.get('detections', [])
             if detections and isinstance(detections, list) and len(detections) > 0:
-                return detections[0].get('label', None)
-        return None
+                ret['detected_class'] = detections[0].get('label', '')
+                if not ret.get('yolo_confidence'):
+                    ret['yolo_confidence'] = detections[0].get('confidence', 0.0)
 
-    def get_yolo_confidence(self, obj):
-        if obj.yolo_detections and isinstance(obj.yolo_detections, dict):
-            detections = obj.yolo_detections.get('detections', [])
-            if detections and isinstance(detections, list) and len(detections) > 0:
-                return detections[0].get('confidence', None)
-        return None
-
-    def get_severity_score(self, obj):
-        if obj.gemini_analysis and isinstance(obj.gemini_analysis, dict):
-            score = obj.gemini_analysis.get('severity_score')
-            if score is not None:
-                return score
-        return obj.initial_severity
-
-    def get_is_emergency(self, obj):
-        if obj.gemini_analysis and isinstance(obj.gemini_analysis, dict):
-            urgency = str(obj.gemini_analysis.get('urgency', '')).upper()
-            if urgency in ['HIGH', 'CRITICAL']:
-                return True
-            if obj.gemini_analysis.get('is_emergency') is True:
-                return True
-        return obj.initial_severity >= 8
-
-    def get_ai_summary(self, obj):
-        if obj.gemini_analysis and isinstance(obj.gemini_analysis, dict):
-            return obj.gemini_analysis.get('summary', '')
-        return ''
+        # Fallback for severity, department, urgency, summary from gemini_analysis
+        if instance.gemini_analysis and isinstance(instance.gemini_analysis, dict):
+            if ret.get('severity_score') is None or ret.get('severity_score') == 5:
+                if 'severity_score' in instance.gemini_analysis:
+                    try:
+                        ret['severity_score'] = int(instance.gemini_analysis['severity_score'])
+                    except (ValueError, TypeError):
+                        pass
+            if not ret.get('assigned_department') or ret.get('assigned_department') == 'GENERAL':
+                if 'department' in instance.gemini_analysis:
+                    ret['assigned_department'] = instance.gemini_analysis['department']
+            if not ret.get('ai_summary'):
+                ret['ai_summary'] = instance.gemini_analysis.get('summary', '')
+            if not ret.get('is_emergency'):
+                urgency = str(instance.gemini_analysis.get('urgency', '')).upper()
+                if urgency in ['HIGH', 'CRITICAL'] or instance.gemini_analysis.get('is_emergency') is True:
+                    ret['is_emergency'] = True
+        return ret
 
 class ComplaintCreateSerializer(serializers.ModelSerializer):
     """Citizen plain-text report serializer with optional photo & auto GPS."""

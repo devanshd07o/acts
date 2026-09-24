@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     HealthCheckView,
     CurrentUserView,
+    ReportIssueView,
     ComplaintCreateView,
     ComplaintListView,
     ComplaintDetailView,
@@ -22,7 +23,8 @@ urlpatterns = [
     path('me/', CurrentUserView.as_view(), name='current-user'),
 
     # Citizen Reporting & Lifecycle
-    path('complaints/report/', ComplaintCreateView.as_view(), name='complaint-report'),
+    path('complaints/report/', ReportIssueView.as_view(), name='complaint-report'),
+    path('complaints/report-issue/', ReportIssueView.as_view(), name='report-issue'),
     path('complaints/', ComplaintListView.as_view(), name='complaint-list'),
     path('complaints/<uuid:id>/', ComplaintDetailView.as_view(), name='complaint-detail'),
     path('complaints/<uuid:id>/confirm/', ComplaintConfirmResolutionView.as_view(), name='complaint-confirm-resolution'),

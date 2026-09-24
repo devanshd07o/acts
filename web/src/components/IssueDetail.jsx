@@ -2,10 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import MobileLayout from './MobileLayout';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getComplaint } from '../api/complaints';
-import { updateClusterStatus, updateClusterPriority } from '../api/admin';
+import { updateClusterStatus, updateClusterPriority, getCrews } from '../api/admin';
 import { getStatusDisplay, getCitizenStatusDisplay, getStatusClasses } from '../utils/status';
 import { useRole } from '../context/RoleContext';
-import { CheckCircle, Circle, Clock } from 'lucide-react';
+import { CheckCircle, Circle, Clock, SlidersHorizontal, ShieldAlert, Wrench, Check, X } from 'lucide-react';
 
 const IssueDetail = () => {
     const { id } = useParams();
@@ -17,8 +17,15 @@ const IssueDetail = () => {
     const [error, setError] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [toastMessage, setToastMessage] = useState(null);
-    const [showPriorityModal, setShowPriorityModal] = useState(false);
-    const [updatingPriority, setUpdatingPriority] = useState(false);
+
+    // Admin Override Panel state
+    const [showOverrideModal, setShowOverrideModal] = useState(false);
+    const [crews, setCrews] = useState([]);
+    const [overridePriority, setOverridePriority] = useState(5);
+    const [overrideStatus, setOverrideStatus] = useState('QUEUED');
+    const [overrideCrew, setOverrideCrew] = useState('');
+    const [overrideNotes, setOverrideNotes] = useState('');
+    const [savingOverride, setSavingOverride] = useState(false);
 
     // Image sizing logic for YOLO bounds
     const [imgDims, setImgDims] = useState({ w: 0, h: 0 });
@@ -37,6 +44,35 @@ const IssueDetail = () => {
         };
         fetchIssue();
     }, [id]);
+
+    // Populate initial override values whenever complaint changes
+    useEffect(() => {
+        if (complaint) {
+            const currentPriority = complaint.cluster_details?.computed_priority ?? complaint.severity_score ?? complaint.initial_severity ?? 5;
+            setOverridePriority(parseFloat(currentPriority) || 5);
+            setOverrideStatus(complaint.status || 'QUEUED');
+            const crewId = complaint.crew_details?.id || complaint.assigned_crew || '';
+            setOverrideCrew(crewId ? String(crewId) : '');
+            setOverrideNotes(complaint.admin_notes || '');
+        }
+    }, [complaint]);
+
+    // Fetch crews for admin override
+    useEffect(() => {
+        if (role === 'admin') {
+            getCrews()
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        setCrews(data);
+                    } else if (data && Array.isArray(data.results)) {
+                        setCrews(data.results);
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to load maintenance crews:", err);
+                });
+        }
+    }, [role]);
 
     const handleImageLoad = (e) => {
         setImgDims({
@@ -68,27 +104,62 @@ const IssueDetail = () => {
         }
     };
 
-    const handleChangePriority = async (newPriority) => {
+    const handleSaveOverride = async () => {
         try {
-            setUpdatingPriority(true);
+            setSavingOverride(true);
             const targetId = complaint.cluster_details?.id || complaint.id;
-            await updateClusterPriority(targetId, newPriority);
-            setComplaint(prev => ({
-                ...prev,
-                cluster_details: prev.cluster_details
-                    ? { ...prev.cluster_details, computed_priority: newPriority }
-                    : { computed_priority: newPriority }
-            }));
-            setShowPriorityModal(false);
-            setToastMessage(`✓ Priority updated to ${newPriority}`);
+            const payload = {
+                computed_priority: parseFloat(overridePriority),
+                status: overrideStatus,
+                assigned_crew: overrideCrew ? overrideCrew : null,
+                admin_notes: overrideNotes
+            };
+
+            const response = await updateClusterPriority(targetId, payload);
+
+            // Step 3: State Sync - update local state
+            const selectedCrewObj = crews.find(c => String(c.id) === String(overrideCrew)) || null;
+            const newPriority = parseFloat(overridePriority);
+            const updatedCrewDetails = response?.assigned_crew_details || selectedCrewObj || (overrideCrew ? complaint?.crew_details : null);
+
+            setComplaint(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    status: overrideStatus,
+                    severity_score: newPriority,
+                    initial_severity: newPriority,
+                    admin_notes: overrideNotes,
+                    assigned_crew: overrideCrew || null,
+                    crew_details: overrideCrew ? updatedCrewDetails : null,
+                    cluster_details: prev.cluster_details ? {
+                        ...prev.cluster_details,
+                        computed_priority: newPriority,
+                        base_severity: Math.round(newPriority),
+                        status: overrideStatus,
+                        assigned_crew: overrideCrew || null,
+                        assigned_crew_details: overrideCrew ? (response?.assigned_crew_details || selectedCrewObj || prev.cluster_details.assigned_crew_details) : null
+                    } : null
+                };
+            });
+
+            setShowOverrideModal(false);
+            setToastMessage("✓ Admin override saved successfully!");
             setTimeout(() => setToastMessage(null), 3000);
         } catch (err) {
-            setShowPriorityModal(false);
-            setToastMessage("Failed to update priority");
+            console.error("Failed to save override:", err);
+            setToastMessage(err.message || "Failed to update override");
             setTimeout(() => setToastMessage(null), 3000);
         } finally {
-            setUpdatingPriority(false);
+            setSavingOverride(false);
         }
+    };
+
+    const getPriorityMeta = (val) => {
+        const num = parseFloat(val) || 0;
+        if (num >= 8) return { label: 'CRITICAL', bg: 'bg-acts-critical', text: 'text-red-700', border: 'border-red-200', lightBg: 'bg-red-50' };
+        if (num >= 5) return { label: 'ELEVATED', bg: 'bg-amber-500', text: 'text-amber-700', border: 'border-amber-200', lightBg: 'bg-amber-50' };
+        return { label: 'LOW', bg: 'bg-emerald-600', text: 'text-emerald-700', border: 'border-emerald-200', lightBg: 'bg-emerald-50' };
     };
 
     const renderTimeline = (status) => {
@@ -156,30 +227,165 @@ const IssueDetail = () => {
                     </div>
                 )}
 
-                {showPriorityModal && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl relative animate-in zoom-in duration-200">
-                            <h3 className="font-bold text-lg text-[#263238] m-0 mb-2">Change Priority</h3>
-                            <p className="text-[#546e7a] text-[13px] m-0 mb-4">Set a new priority level for this issue. This will immediately update the cluster triage order.</p>
-                            <div className="grid grid-cols-5 gap-2 mb-6">
-                                {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map(p => (
-                                    <button
-                                        key={p}
-                                        onClick={() => handleChangePriority(p)}
-                                        disabled={updatingPriority}
-                                        className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 rounded-lg text-sm transition-colors border border-slate-200 disabled:opacity-50"
-                                    >
-                                        {p}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex gap-3 justify-end">
+                {showOverrideModal && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150">
+                        <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-150 flex flex-col max-h-[90%]">
+                            {/* Header */}
+                            <div className="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <SlidersHorizontal size={18} className="text-acts-teal" />
+                                    <div>
+                                        <h3 className="font-bold text-sm m-0 leading-tight">Admin Override Panel</h3>
+                                        <p className="text-[11px] text-slate-400 m-0">Human-in-the-loop triage governance</p>
+                                    </div>
+                                </div>
                                 <button
-                                    onClick={() => setShowPriorityModal(false)}
-                                    disabled={updatingPriority}
-                                    className="px-4 py-2 text-sm font-bold text-[#546e7a] hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-white"
+                                    onClick={() => setShowOverrideModal(false)}
+                                    disabled={savingOverride}
+                                    className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            {/* Scrollable Form Body */}
+                            <div className="p-4 overflow-y-auto space-y-4">
+                                {/* 1. Priority Adjustment (Slider + Number input) */}
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="text-[12px] font-bold text-slate-800 flex items-center gap-1.5">
+                                            <ShieldAlert size={14} className="text-slate-600" />
+                                            Priority (1 - 10)
+                                        </label>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getPriorityMeta(overridePriority).lightBg} ${getPriorityMeta(overridePriority).text} ${getPriorityMeta(overridePriority).border}`}>
+                                                {getPriorityMeta(overridePriority).label}
+                                            </span>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="10"
+                                                step="0.5"
+                                                value={overridePriority}
+                                                onChange={(e) => {
+                                                    const val = Math.min(10, Math.max(1, parseFloat(e.target.value) || 1));
+                                                    setOverridePriority(val);
+                                                }}
+                                                className="w-14 text-center font-black text-sm bg-white border border-slate-300 rounded-md py-0.5 focus:outline-none focus:ring-2 focus:ring-acts-admin"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="10"
+                                        step="0.5"
+                                        value={overridePriority}
+                                        onChange={(e) => setOverridePriority(parseFloat(e.target.value))}
+                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-acts-admin mb-2"
+                                    />
+
+                                    {/* Quick Presets */}
+                                    <div className="flex justify-between items-center text-[11px] text-slate-500 font-semibold">
+                                        {[1, 3, 5, 7, 9, 10].map(p => (
+                                            <button
+                                                key={p}
+                                                type="button"
+                                                onClick={() => setOverridePriority(p)}
+                                                className={`px-2 py-0.5 rounded text-[11px] transition ${Number(overridePriority) === p ? 'bg-acts-admin text-white' : 'hover:bg-slate-200 text-slate-600'}`}
+                                            >
+                                                {p}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* 2. Status Dropdown */}
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-800 mb-1">
+                                        Status
+                                    </label>
+                                    <select
+                                        value={overrideStatus}
+                                        onChange={(e) => setOverrideStatus(e.target.value)}
+                                        className="w-full bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-acts-admin font-medium shadow-2xs"
+                                    >
+                                        <option value="QUEUED">QUEUED (Queued in Triage)</option>
+                                        <option value="ASSIGNED">ASSIGNED (Assigned to Crew)</option>
+                                        <option value="IN_PROGRESS">IN_PROGRESS (In Progress)</option>
+                                        <option value="RESOLVED">RESOLVED (Pending Confirmation)</option>
+                                        <option value="CLOSED">CLOSED (Confirmed & Closed)</option>
+                                        <option value="REOPENED">REOPENED (Reopened by Citizen)</option>
+                                        <option value="REJECTED">REJECTED (Rejected / Spam)</option>
+                                    </select>
+                                </div>
+
+                                {/* 3. Maintenance Crew Dropdown */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="text-[12px] font-bold text-slate-800 flex items-center gap-1.5">
+                                            <Wrench size={14} className="text-slate-600" />
+                                            Maintenance Crew
+                                        </label>
+                                        <span className="text-[10px] text-slate-500">
+                                            {crews.length} crews
+                                        </span>
+                                    </div>
+                                    <select
+                                        value={overrideCrew}
+                                        onChange={(e) => setOverrideCrew(e.target.value)}
+                                        className="w-full bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-acts-admin font-medium shadow-2xs"
+                                    >
+                                        <option value="">-- None (Unassigned) --</option>
+                                        {crews.map(c => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.name} ({c.department}) — {c.is_available ? '🟢 Free' : '🔴 Busy'} ({c.active_tasks_count || 0} active)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* 4. Admin Notes */}
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-800 mb-1">
+                                        Admin Notes (Optional)
+                                    </label>
+                                    <textarea
+                                        rows={2}
+                                        value={overrideNotes}
+                                        onChange={(e) => setOverrideNotes(e.target.value)}
+                                        placeholder="Reason for override or instructions for field crew..."
+                                        className="w-full bg-white border border-slate-300 text-slate-800 text-xs rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-acts-admin shadow-2xs resize-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowOverrideModal(false)}
+                                    disabled={savingOverride}
+                                    className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition border border-slate-200 bg-white"
                                 >
                                     Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSaveOverride}
+                                    disabled={savingOverride}
+                                    className="px-4 py-1.5 text-xs font-bold text-white bg-acts-admin hover:bg-slate-800 rounded-lg transition flex items-center gap-1.5 shadow-sm disabled:opacity-60"
+                                >
+                                    {savingOverride ? (
+                                        <>
+                                            <span className="inline-block animate-spin mr-1">⟳</span> Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Check size={14} /> Save Override
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
@@ -228,8 +434,14 @@ const IssueDetail = () => {
                         <div className="p-4 bg-white flex-1 flex flex-col">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="flex items-center">
-                                    <div className="w-[50px] h-[50px] rounded-full bg-acts-critical text-white text-[22px] font-bold flex flex-col items-center justify-center mr-4 shrink-0 transition-all shadow-sm">
-                                        <span>{Math.round(complaint.cluster_details?.computed_priority ?? complaint.initial_severity ?? 0)}</span>
+                                    <div className={`w-[50px] h-[50px] rounded-full text-white text-[22px] font-bold flex flex-col items-center justify-center mr-4 shrink-0 transition-all shadow-sm ${
+                                        (complaint.cluster_details?.computed_priority ?? complaint.severity_score ?? complaint.initial_severity ?? 0) >= 8
+                                            ? 'bg-acts-critical'
+                                            : (complaint.cluster_details?.computed_priority ?? complaint.severity_score ?? complaint.initial_severity ?? 0) >= 5
+                                            ? 'bg-amber-500'
+                                            : 'bg-emerald-600'
+                                    }`}>
+                                        <span>{Math.round(complaint.cluster_details?.computed_priority ?? complaint.severity_score ?? complaint.initial_severity ?? 0)}</span>
                                     </div>
                                     <div>
                                         <h2 className="m-0 text-[18px] text-[#263238] uppercase font-black pr-2">{complaint.gemini_analysis?.title || 'Reported Issue'}</h2>
@@ -241,10 +453,11 @@ const IssueDetail = () => {
                                 </div>
                                 {role === 'admin' && (
                                     <button
-                                        onClick={() => setShowPriorityModal(true)}
-                                        className="text-[11px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                                        onClick={() => setShowOverrideModal(true)}
+                                        className="text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shrink-0 shadow-2xs"
+                                        title="Open Admin Priority & Dispatch Override Panel"
                                     >
-                                        <span className="material-icons text-[14px]">edit</span>
+                                        <SlidersHorizontal size={13} className="text-acts-admin" />
                                         Override
                                     </button>
                                 )}
@@ -289,7 +502,17 @@ const IssueDetail = () => {
 
                             {/* Crew Assignment Section */}
                             <div className="mb-4">
-                                <h3 className="text-[13px] font-bold text-[#546e7a] uppercase mb-2">Assigned Crew</h3>
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-[13px] font-bold text-[#546e7a] uppercase m-0">Assigned Crew</h3>
+                                    {role === 'admin' && (
+                                        <button
+                                            onClick={() => setShowOverrideModal(true)}
+                                            className="text-[11px] font-bold text-acts-admin hover:underline flex items-center gap-0.5 cursor-pointer"
+                                        >
+                                            <span className="material-icons text-[13px]">swap_horiz</span> Reassign
+                                        </button>
+                                    )}
+                                </div>
                                 {complaint.crew_details ? (
                                     <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                                         <div className="flex justify-between items-start mb-2">
@@ -308,24 +531,44 @@ const IssueDetail = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center text-slate-500 text-[12px] font-medium">
-                                        No crew assigned
+                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center text-slate-500 text-[12px] font-medium flex justify-between items-center">
+                                        <span>No crew assigned</span>
+                                        {role === 'admin' && (
+                                            <button
+                                                onClick={() => setShowOverrideModal(true)}
+                                                className="text-acts-admin font-bold text-xs hover:underline cursor-pointer"
+                                            >
+                                                + Assign Crew
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
 
                             {complaint.admin_notes && (
-                                <div className="mb-4 text-orange-900 bg-orange-50 p-2 rounded text-[13px] border border-orange-200 font-medium">
-                                    <strong>Admin Notes:</strong> {complaint.admin_notes}
+                                <div className="mb-4 text-orange-900 bg-orange-50 p-2.5 rounded text-[13px] border border-orange-200 font-medium">
+                                    <div className="text-[10px] uppercase tracking-wider text-orange-700 font-extrabold mb-0.5">Admin Override Notes</div>
+                                    {complaint.admin_notes}
                                 </div>
                             )}
 
-                            {/* Status Section (Read Only) */}
+                            {/* Status Section */}
                             <div className="bg-white border border-[#cfd8dc] rounded-lg p-3 flex justify-between items-center shadow-sm mt-auto">
                                 <span className="font-medium text-[14px]">Current Status:</span>
-                                <span className={`px-3 py-1.5 rounded-md font-bold text-[13px] ${getStatusClasses(complaint.status, role === 'citizen')}`}>
-                                    {role === 'citizen' ? getCitizenStatusDisplay(complaint.status) : getStatusDisplay(complaint.status)}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`px-3 py-1.5 rounded-md font-bold text-[13px] ${getStatusClasses(complaint.status, role === 'citizen')}`}>
+                                        {role === 'citizen' ? getCitizenStatusDisplay(complaint.status) : getStatusDisplay(complaint.status)}
+                                    </span>
+                                    {role === 'admin' && (
+                                        <button
+                                            onClick={() => setShowOverrideModal(true)}
+                                            className="text-[11px] text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2 py-1 rounded font-bold transition cursor-pointer"
+                                            title="Override Status or Priority"
+                                        >
+                                            Change
+                                        </button>
+                                    )}
+                                </div>
                             </div>
 
                             {role === 'citizen' && renderTimeline(complaint.status)}

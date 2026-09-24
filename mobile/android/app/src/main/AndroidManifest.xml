@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.acts.mobile">
+    package="com.acts.acts_mobile">
 
     <!-- Permissions required for ACTS civic issue reporting -->
     <uses-permission android:name="android.permission.INTERNET"/>

@@ -7,8 +7,16 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
-from .models import Complaint, ComplaintCluster, MaintenanceCrew, ComplaintStatus, Notification
+from .models import (
+    Complaint,
+    ComplaintCluster,
+    MaintenanceCrew,
+    ComplaintStatus,
+    Notification,
+    DepartmentType
+)
 from .serializers import (
+    ComplaintSerializer,
     ComplaintCreateSerializer,
     ComplaintDetailSerializer,
     ComplaintClusterSerializer,
@@ -21,6 +29,7 @@ from .services import (
     validate_image_clarity,
     detect_civic_defects,
     analyze_civic_issue,
+    map_to_department,
     compress_image,
     cluster_and_weight_complaint,
     dispatch_cluster_to_crew,
@@ -42,78 +51,150 @@ class CurrentUserView(APIView):
         return Response({"username": request.user.username, "is_admin": request.user.is_staff})
 
 
-class ComplaintCreateView(APIView):
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+
+class ReportIssueView(APIView):
     """
-    Step 1 & 2: Citizen/Student reports an issue with plain-text & optional photo.
-    Step 3: AI Triage + Crowd Clustering + Smart Crew Dispatch.
+    Report Civic Issue View with JWT Authentication & ML Triage Pipeline:
+    - Enforces IsAuthenticated (JWT) or Guest Citizen submission.
+    - Rate limited via AnonRateThrottle & UserRateThrottle.
+    - Accepts multipart form data (image, citizen_description/raw_text, latitude, longitude, campus_zone, address).
+    - Ties the issue and uploaded image to request.user.
+    - Runs YOLO defect detection & Gemini Multimodal AI triage services.
+    - Saves all AI results (detected_class, yolo_confidence, severity_score, assigned_department, is_emergency, ai_summary) to the database.
+    - Merges report into crowd cluster and dispatches to nearest crew.
     """
     parser_classes = [MultiPartParser, FormParser, JSONParser]
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        serializer = ComplaintCreateSerializer(data=request.data)
+        image_file = request.FILES.get('image')
+        if image_file and image_file.size > 15 * 1024 * 1024:
+            return Response({"image": ["Image file exceeds maximum allowable size (15MB)."]}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate writable user fields via ComplaintSerializer
+        serializer = ComplaintSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        complaint = serializer.save(user=request.user)
-        # Temporary compatibility mapping for legacy logic (trust scores, etc)
-        complaint.user_identifier = request.user.username
+        # Tie complaint to authenticated user if logged in, else guest citizen
+        user = request.user if request.user and request.user.is_authenticated else None
+        user_identifier = (user.username if user else None) or request.data.get('user_identifier') or 'citizen_mobile'
+        complaint = serializer.save(
+            user=user,
+            user_identifier=user_identifier
+        )
 
-        image_file = request.FILES.get('image')
+        # Ensure citizen_description and raw_text are in sync
+        description_text = complaint.citizen_description or complaint.raw_text or request.data.get('raw_text', '') or request.data.get('citizen_description', '')
+        complaint.citizen_description = description_text
+        complaint.raw_text = description_text
 
-        # 1. Computer Vision Pipeline (if photo provided)
+        # 1. Computer Vision Validation & Compression
         if image_file:
             is_clear, blur_score = validate_image_clarity(image_file)
             compressed_file = compress_image(image_file)
             complaint.is_valid_image = is_clear
             complaint.blur_score = blur_score
-            complaint.compressed_image = compressed_file
+            if compressed_file:
+                complaint.compressed_image = compressed_file
             complaint.save()
 
-            if complaint.image and hasattr(complaint.image, 'path') and os.path.exists(complaint.image.path):
-                complaint.yolo_detections = detect_civic_defects(complaint.image.path)
+        # 2. YOLO Defect Detection
+        image_path = None
+        if complaint.image and hasattr(complaint.image, 'path') and os.path.exists(complaint.image.path):
+            image_path = complaint.image.path
+        elif complaint.compressed_image and hasattr(complaint.compressed_image, 'path') and os.path.exists(complaint.compressed_image.path):
+            image_path = complaint.compressed_image.path
 
-        # 2. AI Triage Pipeline (Gemini Multimodal / Text)
-        image_path = complaint.image.path if (complaint.image and hasattr(complaint.image, 'path') and os.path.exists(complaint.image.path)) else None
-        gemini_result = analyze_civic_issue(raw_text=complaint.raw_text, image_path=image_path)
+        detected_class = ''
+        yolo_confidence = 0.0
+        if image_path:
+            yolo_result = detect_civic_defects(image_path)
+            complaint.yolo_detections = yolo_result
+            detections = yolo_result.get('detections', [])
+            if detections and isinstance(detections, list) and len(detections) > 0:
+                detected_class = detections[0].get('label', '')
+                yolo_confidence = float(detections[0].get('confidence', 0.0))
 
+        # 3. Gemini Multimodal / Text Triage
+        gemini_result = analyze_civic_issue(raw_text=description_text, image_path=image_path)
         complaint.gemini_analysis = gemini_result
-        complaint.department = gemini_result.get('department', 'GENERAL')
-        if "severity_score" in gemini_result and isinstance(gemini_result["severity_score"], (int, float)):
-            complaint.initial_severity = int(gemini_result["severity_score"])
 
-        # 3. Trust Evaluation
+        # Parse Gemini results
+        severity_score = 5
+        if "severity_score" in gemini_result and isinstance(gemini_result["severity_score"], (int, float)):
+            severity_score = int(gemini_result["severity_score"])
+
+        assigned_dept = gemini_result.get('department', 'GENERAL')
+        if assigned_dept not in DepartmentType.values:
+            assigned_dept = map_to_department(assigned_dept or 'GENERAL')
+
+        urgency = str(gemini_result.get('urgency', '')).upper()
+        is_emergency = (urgency in ['HIGH', 'CRITICAL'] or gemini_result.get('is_emergency') is True or severity_score >= 8)
+        ai_summary = gemini_result.get('summary', '') or gemini_result.get('title', '')
+
+        # 4. Save AI results directly to Complaint database columns
+        complaint.detected_class = detected_class
+        complaint.yolo_confidence = yolo_confidence
+        complaint.severity_score = severity_score
+        complaint.assigned_department = assigned_dept
+        complaint.is_emergency = is_emergency
+        complaint.ai_summary = ai_summary
+
+        # Keep legacy compatibility fields aligned
+        complaint.department = assigned_dept
+        complaint.initial_severity = severity_score
+
+        # 5. Trust Evaluation
         initial_status = evaluate_submission_trust(complaint.user_trust_score)
         complaint.status = initial_status
         complaint.save()
 
-        # 4. Crowd-Weighted Clustering (Duplicate Merging & Urgency Climbing)
+        # 6. Crowd-Weighted Clustering & Smart Crew Dispatch
         cluster, is_new = cluster_and_weight_complaint(complaint)
+        complaint.cluster = cluster
         complaint.save(update_fields=["cluster"])
 
-        # 5. Smart Routing Engine (Auto-dispatch nearest available crew)
         if not cluster.assigned_crew:
             dispatch_cluster_to_crew(cluster)
 
+        response_serializer = ComplaintSerializer(complaint, context={'request': request})
         detail_serializer = ComplaintDetailSerializer(complaint, context={'request': request})
+
         return Response({
             "message": "Complaint processed and merged into triage pipeline.",
             "is_new_cluster": is_new,
             "crowd_report_count": cluster.crowd_report_count,
             "computed_priority": cluster.computed_priority,
             "cluster_id": cluster.id,
-            "complaint": detail_serializer.data
+            "complaint": response_serializer.data,
+            "complaint_detail": detail_serializer.data
         }, status=status.HTTP_201_CREATED)
 
 
+class ComplaintCreateView(ReportIssueView):
+    """Backwards-compatible alias for ReportIssueView."""
+    pass
+
+
 class ComplaintListView(generics.ListAPIView):
-    """List citizen reports securely isolated by authenticated user."""
+    """List citizen reports isolated by authenticated user or guest user identifier."""
     serializer_class = ComplaintDetailSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
 
     def get_queryset(self):
-        queryset = Complaint.objects.filter(user=self.request.user).select_related('cluster', 'assigned_crew')
+        if self.request.user and self.request.user.is_authenticated:
+            queryset = Complaint.objects.filter(user=self.request.user).select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
+        else:
+            uid = self.request.query_params.get('user_identifier', 'citizen_mobile')
+            if uid == 'all' or not uid:
+                queryset = Complaint.objects.all().select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
+            else:
+                queryset = Complaint.objects.filter(user_identifier=uid).select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
+
         status_param = self.request.query_params.get('status')
         zone_param = self.request.query_params.get('campus_zone')
 
@@ -127,7 +208,7 @@ class ComplaintListView(generics.ListAPIView):
 
 class ComplaintDetailView(generics.RetrieveAPIView):
     """Retrieve full details of an individual complaint report."""
-    queryset = Complaint.objects.all().select_related('cluster', 'assigned_crew')
+    queryset = Complaint.objects.all().select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
     serializer_class = ComplaintDetailSerializer
     lookup_field = 'id'
 
@@ -178,7 +259,7 @@ class AdminClusterListView(generics.ListAPIView):
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):
-        queryset = ComplaintCluster.objects.all().select_related('assigned_crew')
+        queryset = ComplaintCluster.objects.all().select_related('assigned_crew').prefetch_related('reports')
         status_param = self.request.query_params.get('status')
         if status_param:
             queryset = queryset.filter(status=status_param)
@@ -193,20 +274,26 @@ class AdminMapMarkersView(APIView):
     def get(self, request):
         clusters = ComplaintCluster.objects.exclude(
             status__in=[ComplaintStatus.CLOSED, ComplaintStatus.REJECTED]
-        ).select_related('assigned_crew')
+        ).select_related('assigned_crew').prefetch_related('reports')
 
         data = []
         for c in clusters:
-            first_comp = c.reports.first()
+            reports = c.reports.all()
+            first_comp = reports[0] if len(reports) > 0 else None
             data.append({
                 "id": str(c.id),
                 "title": c.title,
                 "department": c.department,
+                "assigned_department": first_comp.assigned_department if (first_comp and first_comp.assigned_department) else c.department,
                 "campus_zone": c.campus_zone,
                 "latitude": float(c.latitude),
                 "longitude": float(c.longitude),
                 "crowd_count": c.crowd_report_count,
+                "crowd_report_count": c.crowd_report_count,
                 "computed_priority": c.computed_priority,
+                "severity_score": first_comp.severity_score if first_comp else c.base_severity,
+                "base_severity": c.base_severity,
+                "ai_summary": first_comp.ai_summary if (first_comp and first_comp.ai_summary) else (first_comp.citizen_description or first_comp.raw_text if first_comp else c.title),
                 "status": c.status,
                 "preview_complaint_id": str(first_comp.id) if first_comp else None,
                 "assigned_crew_name": c.assigned_crew.name if c.assigned_crew else None,
@@ -231,25 +318,123 @@ class CampusHealthAnalyticsView(APIView):
 
 
 class PriorityOverrideView(APIView):
-    """Section 5.4: Admin manual override of AI-assigned priority score."""
+    """
+    Section 5.4: Admin manual override of AI-assigned priority score, status, and crew assignment.
+    Fulfills human-in-the-loop requirement.
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    @transaction.atomic
+    def patch(self, request, cluster_id):
+        return self._handle_override(request, cluster_id)
+
+    @transaction.atomic
     def post(self, request, cluster_id):
+        return self._handle_override(request, cluster_id)
+
+    def _handle_override(self, request, cluster_id):
+        cluster = None
+        comp = None
         try:
-            cluster = ComplaintCluster.objects.get(id=cluster_id)
+            cluster = ComplaintCluster.objects.select_related('assigned_crew').get(id=cluster_id)
         except ComplaintCluster.DoesNotExist:
-            return Response({"error": "Cluster not found"}, status=status.HTTP_404_NOT_FOUND)
+            try:
+                comp = Complaint.objects.select_related('cluster', 'assigned_crew').get(id=cluster_id)
+                cluster = comp.cluster
+            except Complaint.DoesNotExist:
+                return Response({"error": "Cluster or Complaint not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = PriorityOverrideSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data
 
-        cluster.computed_priority = serializer.validated_data['priority']
-        cluster.save()
+        # 1. Update Priority
+        new_priority = data.get('computed_priority') if 'computed_priority' in data else data.get('priority')
+        if new_priority is not None:
+            try:
+                val = round(float(new_priority), 2)
+                if not (1.0 <= val <= 10.0):
+                    return Response({"error": "Priority must be between 1.0 and 10.0"}, status=status.HTTP_400_BAD_REQUEST)
+                if cluster:
+                    cluster.computed_priority = val
+                    cluster.base_severity = int(val)
+                    cluster.reports.all().update(severity_score=int(val))
+                if comp:
+                    comp.severity_score = int(val)
+                    comp.initial_severity = int(val)
+            except (ValueError, TypeError):
+                return Response({"error": "Invalid priority value"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Update Status
+        new_status = data.get('status')
+        if new_status:
+            if new_status not in ComplaintStatus.values:
+                return Response({
+                    "error": f"Invalid status '{new_status}'. Allowed: {list(ComplaintStatus.values)}"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if cluster:
+                cluster.status = new_status
+                cluster.reports.all().update(status=new_status)
+            if comp:
+                comp.status = new_status
+
+        # 3. Update Assigned Maintenance Crew
+        if 'assigned_crew' in data:
+            crew_id = data.get('assigned_crew')
+            if crew_id in (None, '', 'none', 'null'):
+                if cluster and cluster.assigned_crew:
+                    old_crew = cluster.assigned_crew
+                    old_crew.active_tasks_count = max(0, old_crew.active_tasks_count - 1)
+                    old_crew.save()
+                    cluster.assigned_crew = None
+                    cluster.reports.all().update(assigned_crew=None)
+                if comp:
+                    comp.assigned_crew = None
+            else:
+                try:
+                    crew = MaintenanceCrew.objects.get(id=crew_id)
+                    if cluster:
+                        if cluster.assigned_crew != crew:
+                            if cluster.assigned_crew:
+                                old_crew = cluster.assigned_crew
+                                old_crew.active_tasks_count = max(0, old_crew.active_tasks_count - 1)
+                                old_crew.save()
+                            cluster.assigned_crew = crew
+                            crew.active_tasks_count += 1
+                            crew.save()
+                        cluster.reports.all().update(assigned_crew=crew)
+                        if cluster.status in [ComplaintStatus.SUBMITTED, ComplaintStatus.QUEUED]:
+                            cluster.status = ComplaintStatus.ASSIGNED
+                            cluster.reports.all().update(status=ComplaintStatus.ASSIGNED)
+                    if comp:
+                        comp.assigned_crew = crew
+                except MaintenanceCrew.DoesNotExist:
+                    return Response({"error": f"MaintenanceCrew with id '{crew_id}' not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 4. Update Admin Notes
+        admin_notes = data.get('admin_notes')
+        if admin_notes is not None:
+            if cluster:
+                cluster.reports.all().update(admin_notes=admin_notes)
+            if comp:
+                comp.admin_notes = admin_notes
+
+        if cluster:
+            cluster.save()
+        if comp:
+            comp.save()
+
+        active_cluster = cluster or (comp.cluster if comp else None)
+        crew_obj = active_cluster.assigned_crew if active_cluster else (comp.assigned_crew if comp else None)
+        crew_details = MaintenanceCrewSerializer(crew_obj).data if crew_obj else None
 
         return Response({
-            "message": f"Priority updated to {cluster.computed_priority}",
-            "cluster_id": cluster.id,
-            "new_priority": cluster.computed_priority
-        })
+            "message": "Human-in-the-loop override saved successfully.",
+            "cluster_id": str(active_cluster.id) if active_cluster else str(comp.id),
+            "computed_priority": active_cluster.computed_priority if active_cluster else float(comp.severity_score),
+            "status": active_cluster.status if active_cluster else comp.status,
+            "assigned_crew": str(crew_obj.id) if crew_obj else None,
+            "assigned_crew_details": crew_details,
+            "cluster": ComplaintClusterSerializer(active_cluster).data if active_cluster else None
+        }, status=status.HTTP_200_OK)
 
 
 class MaintenanceCrewListCreateView(generics.ListCreateAPIView):

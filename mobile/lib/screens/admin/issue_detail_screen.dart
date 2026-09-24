@@ -27,6 +27,12 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
     _detailFuture = _apiClient.fetchComplaintDetail(widget.complaintId);
   }
 
+  Future<void> _refresh() async {
+    setState(() {
+      _loadDetail();
+    });
+  }
+
   void _showPriorityOverrideDialog(ComplaintModel complaint) {
     double selectedScore = complaint.computedPriority;
 
@@ -56,15 +62,22 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
               onPressed: () async {
                 Navigator.pop(ctx);
                 if (complaint.clusterId != null) {
-                  await _apiClient.overridePriority(
-                    clusterId: complaint.clusterId!,
-                    newPriority: selectedScore,
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Priority adjusted to ${selectedScore.toStringAsFixed(0)}/10')),
-                  );
-                  _loadDetail();
-                  setState(() {});
+                  try {
+                    await _apiClient.overridePriority(
+                      clusterId: complaint.clusterId!,
+                      newPriority: selectedScore,
+                    );
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Priority adjusted to ${selectedScore.toStringAsFixed(0)}/10')),
+                    );
+                    _refresh();
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to override priority: $e'), backgroundColor: Colors.red),
+                    );
+                  }
                 }
               },
               child: const Text('SAVE OVERRIDE'),
@@ -76,36 +89,44 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
   }
 
   void _openAdminConnect(String department) async {
-    final contact = await _apiClient.fetchAdminConnect(department);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.support_agent, color: AppTheme.primaryBlue),
-            const SizedBox(width: 8),
-            Text('$department Officer'),
+    try {
+      final contact = await _apiClient.fetchAdminConnect(department);
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.support_agent, color: AppTheme.primaryBlue),
+              SizedBox(width: 8),
+              Text('$department Officer'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Responsible Officer: ${contact['officer']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text('Designation: ${contact['designation']}'),
+              const SizedBox(height: 4),
+              Text('Direct Phone: ${contact['phone']}'),
+              const SizedBox(height: 4),
+              Text('Email: ${contact['email']}'),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CLOSE')),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Responsible Officer: ${contact['officer']}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text('Designation: ${contact['designation']}'),
-            const SizedBox(height: 4),
-            Text('Direct Phone: ${contact['phone']}'),
-            const SizedBox(height: 4),
-            Text('Email: ${contact['email']}'),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CLOSE')),
-        ],
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not fetch directory contact: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -113,25 +134,45 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Triage & Dispatch Details'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refresh,
+          ),
+        ],
       ),
-      body: FutureBuilder<ComplaintModel>(
-        future: _detailFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError || !snapshot.hasData) {
-            return Center(child: Text('Error loading ticket: ${snapshot.error}'));
-          }
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: FutureBuilder<ComplaintModel>(
+          future: _detailFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError || !snapshot.hasData) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const SizedBox(height: 12),
+                    Text('Error loading ticket: ${snapshot.error}'),
+                    const SizedBox(height: 12),
+                    ElevatedButton(onPressed: _refresh, child: const Text('Retry')),
+                  ],
+                ),
+              );
+            }
 
-          final complaint = snapshot.data!;
-          final gemini = complaint.geminiAnalysis;
+            final complaint = snapshot.data!;
+            final gemini = complaint.geminiAnalysis;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                 if (complaint.imageUrl != null && complaint.imageUrl!.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -237,6 +278,7 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }

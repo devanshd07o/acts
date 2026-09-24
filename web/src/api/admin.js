@@ -31,12 +31,16 @@ export const updateClusterStatus = (clusterId, status) => {
     });
 };
 
-export const updateClusterPriority = (clusterId, priority) => {
+export const updateClusterPriority = (clusterId, data) => {
+    const payload = typeof data === 'object' && data !== null
+        ? data
+        : { computed_priority: parseFloat(data), priority: parseFloat(data) };
+
     return fetchClient(`/admin/clusters/${clusterId}/override-priority/`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ priority: parseFloat(priority) })
+        body: JSON.stringify(payload)
     });
 };
