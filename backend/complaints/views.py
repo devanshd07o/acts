@@ -506,7 +506,10 @@ class PriorityOverrideView(APIView):
         # 2. Update Status
         new_status = data.get('status')
         if new_status:
-            if new_status not in ComplaintStatus.values:
+            normalized_status = str(new_status).upper()
+            if normalized_status in ComplaintStatus.values:
+                new_status = normalized_status
+            else:
                 return Response({
                     "error": f"Invalid status '{new_status}'. Allowed: {list(ComplaintStatus.values)}"
                 }, status=status.HTTP_400_BAD_REQUEST)
