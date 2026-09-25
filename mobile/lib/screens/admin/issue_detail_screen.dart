@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
+import '../../config/app_routes.dart';
 import '../../config/api_constants.dart';
 import '../../models/complaint_model.dart';
 import '../../services/api_client.dart';
+import '../../widgets/desktop_scaffold.dart';
 import '../../widgets/severity_badge.dart';
 
 class IssueDetailScreen extends StatefulWidget {
@@ -456,19 +458,16 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Triage & Dispatch Details',
-          style: TextStyle(fontWeight: FontWeight.w800),
+    return DesktopScaffold(
+      title: 'Triage & Resolution Details',
+      currentRoute: AppRoutes.adminTickets,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh_rounded),
+          tooltip: 'Refresh Ticket',
+          onPressed: _refresh,
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _refresh,
-          ),
-        ],
-      ),
+      ],
       body: FutureBuilder<ComplaintModel>(
         future: _detailFuture,
         builder: (context, snapshot) {

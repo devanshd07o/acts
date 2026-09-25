@@ -3,7 +3,6 @@ import '../config/theme.dart';
 import '../config/app_routes.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
-import 'right_auxiliary_panel.dart';
 
 class DesktopScaffold extends StatefulWidget {
   final Widget body;
@@ -12,9 +11,8 @@ class DesktopScaffold extends StatefulWidget {
   final List<Widget>? actions;
   final Widget? floatingActionButton;
 
-  // Persists sidebar states across route switches
-  static final ValueNotifier<bool> isSidebarExpanded = ValueNotifier<bool>(true);
-  static final ValueNotifier<bool> isRightPanelExpanded = ValueNotifier<bool>(false);
+  // Persists sidebar states across route switches (Default: Collapsed)
+  static final ValueNotifier<bool> isSidebarExpanded = ValueNotifier<bool>(false);
 
   const DesktopScaffold({
     super.key,
@@ -33,7 +31,8 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
   @override
   void initState() {
     super.initState();
-    DesktopScaffold.isSidebarExpanded.value = true;
+    // Default: Collapsed on initial launch as requested
+    DesktopScaffold.isSidebarExpanded.value = false;
   }
 
   @override
@@ -86,16 +85,12 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
                     label: 'Triage Queue',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.map_outlined),
-                    label: 'Tactical Map',
-                  ),
-                  BottomNavigationBarItem(
                     icon: Icon(Icons.view_in_ar_rounded),
                     label: '3D Twin',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.analytics_outlined),
-                    label: 'Analytics',
+                    label: 'Workload',
                   ),
                 ]
               : const [
@@ -121,28 +116,25 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
       );
     }
 
-    // Desktop Layout: Clean 3-Column Architecture
+    // Desktop Layout: Clean Focused Workspace
     return ValueListenableBuilder<bool>(
       valueListenable: DesktopScaffold.isSidebarExpanded,
       builder: (context, isLeftExpanded, _) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: DesktopScaffold.isRightPanelExpanded,
-          builder: (context, isRightExpanded, _) {
-            // In Light Mode, Left Sidebar is pure clean white with soft subtle border
-            final sidebarBg = isDark ? const Color(0xFF0B0F19) : Colors.white;
-            final sidebarBorder = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-            final headerBg = isDark ? const Color(0xFF0F172A) : Colors.white;
-            final headerBorder = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-            final headerTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
+        // In Light Mode, Left Sidebar is pure clean white with soft subtle border
+        final sidebarBg = isDark ? const Color(0xFF0B0F19) : Colors.white;
+        final sidebarBorder = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+        final headerBg = isDark ? const Color(0xFF0F172A) : Colors.white;
+        final headerBorder = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+        final headerTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
 
-            return Scaffold(
-              backgroundColor: isDark ? const Color(0xFF07090E) : const Color(0xFFF8FAFC),
-              body: Row(
-                children: [
-                  // 1. Expandable Left Sidebar (Nav & Profile)
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeInOutCubic,
+        return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF07090E) : const Color(0xFFF8FAFC),
+          body: Row(
+            children: [
+              // 1. Expandable Left Sidebar (Nav & Profile)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeInOutCubic,
                     width: isLeftExpanded ? 260 : 76,
                     decoration: BoxDecoration(
                       color: sidebarBg,
@@ -278,21 +270,6 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
                                   ),
 
                                   ...?widget.actions,
-
-                                  const SizedBox(width: 4),
-
-                                  // Toggle Auxiliary Right Panel
-                                  IconButton(
-                                    icon: Icon(
-                                      isRightExpanded ? Icons.view_sidebar_rounded : Icons.view_sidebar_outlined,
-                                      color: isRightExpanded ? const Color(0xFF2563EB) : const Color(0xFF64748B),
-                                      size: 20,
-                                    ),
-                                    tooltip: isRightExpanded ? 'Hide Auxiliary Panel' : 'Show Auxiliary Panel',
-                                    onPressed: () {
-                                      DesktopScaffold.isRightPanelExpanded.value = !isRightExpanded;
-                                    },
-                                  ),
                                 ],
                               ),
                             ],
@@ -306,25 +283,13 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
                       ],
                     ),
                   ),
-
-                  // 3. Right Auxiliary Panel (Contextual Telemetry & Feeds)
-                  RightAuxiliaryPanel(
-                    isExpanded: isRightExpanded,
-                    onToggle: () {
-                      DesktopScaffold.isRightPanelExpanded.value = !isRightExpanded;
-                    },
-                    isAdmin: isAdmin,
-                    currentRoute: widget.currentRoute,
-                  ),
                 ],
               ),
               floatingActionButton: widget.floatingActionButton,
             );
           },
         );
-      },
-    );
-  }
+      }
 
   Widget _buildSidebarHeader(bool isExpanded, bool isDark) {
     if (!isExpanded) {
@@ -523,16 +488,6 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
       const SizedBox(height: 6),
       _navPillItem(
         context: context,
-        icon: Icons.map_outlined,
-        label: 'Campus Map',
-        route: AppRoutes.adminMap,
-        isActive: widget.currentRoute == AppRoutes.adminMap,
-        isExpanded: isExpanded,
-        isDark: isDark,
-      ),
-      const SizedBox(height: 6),
-      _navPillItem(
-        context: context,
         icon: Icons.assignment_outlined,
         label: 'My Reports',
         route: AppRoutes.myReports,
@@ -567,16 +522,6 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
       const SizedBox(height: 6),
       _navPillItem(
         context: context,
-        icon: Icons.map_outlined,
-        label: 'Tactical GIS Map',
-        route: AppRoutes.adminMap,
-        isActive: widget.currentRoute == AppRoutes.adminMap,
-        isExpanded: isExpanded,
-        isDark: isDark,
-      ),
-      const SizedBox(height: 6),
-      _navPillItem(
-        context: context,
         icon: Icons.view_in_ar_rounded,
         label: 'Campus 3D Twin',
         route: AppRoutes.campus3DTwin,
@@ -588,19 +533,9 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
       _navPillItem(
         context: context,
         icon: Icons.analytics_outlined,
-        label: 'Analytics & Health',
+        label: 'Department Workload',
         route: AppRoutes.analytics,
         isActive: widget.currentRoute == AppRoutes.analytics,
-        isExpanded: isExpanded,
-        isDark: isDark,
-      ),
-      const SizedBox(height: 6),
-      _navPillItem(
-        context: context,
-        icon: Icons.switch_account_outlined,
-        label: 'Student View',
-        route: AppRoutes.home,
-        isActive: widget.currentRoute == AppRoutes.home,
         isExpanded: isExpanded,
         isDark: isDark,
       ),
@@ -690,16 +625,11 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
           }
           break;
         case 1:
-          if (widget.currentRoute != AppRoutes.adminMap) {
-            Navigator.pushReplacementNamed(context, AppRoutes.adminMap);
-          }
-          break;
-        case 2:
           if (widget.currentRoute != AppRoutes.campus3DTwin) {
             Navigator.pushReplacementNamed(context, AppRoutes.campus3DTwin);
           }
           break;
-        case 3:
+        case 2:
           if (widget.currentRoute != AppRoutes.analytics) {
             Navigator.pushReplacementNamed(context, AppRoutes.analytics);
           }
@@ -734,9 +664,8 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
   int _getNavIndex(String route, bool isAdmin) {
     if (isAdmin) {
       if (route == AppRoutes.adminTickets) return 0;
-      if (route == AppRoutes.adminMap) return 1;
-      if (route == AppRoutes.campus3DTwin) return 2;
-      if (route == AppRoutes.analytics) return 3;
+      if (route == AppRoutes.campus3DTwin) return 1;
+      if (route == AppRoutes.analytics) return 2;
       return 0;
     } else {
       if (route == AppRoutes.home) return 0;

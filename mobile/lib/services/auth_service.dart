@@ -14,6 +14,8 @@ class AuthService extends ChangeNotifier {
   static const String _keyPhotoUrl = 'acts_photo_url';
   static const String _keyIsAdmin = 'acts_is_admin';
   static const String _keyBaseUrl = 'acts_custom_base_url';
+  static const String _keyRollNo = 'acts_roll_no';
+  static const String _keyEmployeeId = 'acts_employee_id';
 
   SharedPreferences? _prefs;
 
@@ -65,6 +67,14 @@ class AuthService extends ChangeNotifier {
     return _prefs?.getString(_keyBaseUrl);
   }
 
+  String get rollNo {
+    return _prefs?.getString(_keyRollNo) ?? '';
+  }
+
+  String get employeeId {
+    return _prefs?.getString(_keyEmployeeId) ?? '';
+  }
+
   Future<void> saveAuth({
     required String accessToken,
     required String refreshToken,
@@ -73,6 +83,8 @@ class AuthService extends ChangeNotifier {
     String? email,
     String? fullName,
     String? photoUrl,
+    String? rollNo,
+    String? employeeId,
   }) async {
     await init();
     await _prefs?.setString(_keyAccessToken, accessToken);
@@ -97,6 +109,19 @@ class AuthService extends ChangeNotifier {
     } else {
       await _prefs?.remove(_keyPhotoUrl);
     }
+
+    if (rollNo != null && rollNo.isNotEmpty) {
+      await _prefs?.setString(_keyRollNo, rollNo);
+    } else {
+      await _prefs?.remove(_keyRollNo);
+    }
+
+    if (employeeId != null && employeeId.isNotEmpty) {
+      await _prefs?.setString(_keyEmployeeId, employeeId);
+    } else {
+      await _prefs?.remove(_keyEmployeeId);
+    }
+
     notifyListeners();
   }
 
@@ -126,6 +151,8 @@ class AuthService extends ChangeNotifier {
     await _prefs?.remove(_keyFullName);
     await _prefs?.remove(_keyPhotoUrl);
     await _prefs?.remove(_keyIsAdmin);
+    await _prefs?.remove(_keyRollNo);
+    await _prefs?.remove(_keyEmployeeId);
     notifyListeners();
   }
 }

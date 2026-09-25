@@ -51,6 +51,7 @@ mobile/ios/Flutter/flutter_export_environment.sh
 node_modules/
 dist/
 .codegraph/
+Release/
 
 # Temp scratch scripts & images in root
 abes_*.jpg

@@ -79,6 +79,19 @@ class ApiClient {
     );
   }
 
+  Future<bool> fetchHealth({String? customUrl}) async {
+    try {
+      final base = customUrl ?? ApiConstants.baseUrl;
+      final res = await Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 4),
+        receiveTimeout: const Duration(seconds: 4),
+      )).get('$base/api/health/');
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   ApiException _handleDioError(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.sendTimeout ||
@@ -211,6 +224,8 @@ class ApiClient {
     required String fullName,
     String? photoUrl,
     String role = 'student',
+    String? rollNo,
+    String? employeeId,
   }) async {
     try {
       final res = await _dio.post(
@@ -219,6 +234,8 @@ class ApiClient {
           'email': email,
           'full_name': fullName,
           'role': role,
+          if (rollNo != null && rollNo.isNotEmpty) 'roll_no': rollNo,
+          if (employeeId != null && employeeId.isNotEmpty) 'employee_id': employeeId,
         },
       );
 

@@ -49,10 +49,62 @@ const Spinner = () => (
     </div>
 );
 
+const DEMO_CLUSTERS = [
+    {
+        id: 'ACTS-2026-1042',
+        preview_complaint_id: 'ACTS-2026-1042',
+        title: 'Severe Road Pothole & Cavity on Main Driveway',
+        department: 'CIVIL',
+        campus_zone: 'Gate 1 Main Boulevard (Near Kalpana Chawla Block)',
+        computed_priority: 9.4,
+        crowd_report_count: 8,
+        status: 'QUEUED',
+        assigned_crew_name: 'Civil Rapid Repair Crew',
+        created_at: new Date(Date.now() - 14 * 60000).toISOString(),
+    },
+    {
+        id: 'ACTS-2026-1089',
+        preview_complaint_id: 'ACTS-2026-1089',
+        title: 'High-Voltage Exposed Live Conduit & Sparks',
+        department: 'ELECTRICAL',
+        campus_zone: 'Bhabha Block Ground Floor Corridor',
+        computed_priority: 9.8,
+        crowd_report_count: 14,
+        status: 'ASSIGNED',
+        assigned_crew_name: 'Electrical Emergency Crew',
+        created_at: new Date(Date.now() - 32 * 60000).toISOString(),
+    },
+    {
+        id: 'ACTS-2026-1102',
+        preview_complaint_id: 'ACTS-2026-1102',
+        title: 'Main Water Pipeline Fracture & Corridor Flooding',
+        department: 'PLUMBING',
+        campus_zone: 'Between Central Mess & Boys Hostel 2',
+        computed_priority: 8.5,
+        crowd_report_count: 6,
+        status: 'IN_PROGRESS',
+        assigned_crew_name: 'Water Supply & Plumbing Squad',
+        created_at: new Date(Date.now() - 60 * 60000).toISOString(),
+    },
+    {
+        id: 'ACTS-2026-1115',
+        preview_complaint_id: 'ACTS-2026-1115',
+        title: 'Cafeteria Solid Waste Bin Overflow',
+        department: 'SANITATION',
+        campus_zone: 'Cafeteria Central Courtyard',
+        computed_priority: 5.8,
+        crowd_report_count: 3,
+        status: 'RESOLVED',
+        assigned_crew_name: 'Campus Hygiene Squad',
+        created_at: new Date(Date.now() - 180 * 60000).toISOString(),
+    },
+];
+
 const TicketList = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    const [isDemoMode, setIsDemoMode] = useState(false);
     const [clusters, setClusters] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -61,6 +113,12 @@ const TicketList = () => {
     const [showFilterBar, setShowFilterBar] = useState(false);
 
     const fetchClusters = useCallback(async () => {
+        if (isDemoMode) {
+            setClusters(DEMO_CLUSTERS);
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             setError(null);
@@ -71,10 +129,11 @@ const TicketList = () => {
             setClusters(list);
         } catch (err) {
             setError(err.message || 'Failed to load tickets');
+            setClusters([]);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [isDemoMode]);
 
     useEffect(() => { fetchClusters(); }, [fetchClusters]);
 
@@ -99,6 +158,27 @@ const TicketList = () => {
 
     const actions = (
         <div className="flex items-center gap-2">
+            {/* Live vs Sandbox Switcher */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+                <button
+                    onClick={() => setIsDemoMode(false)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                        !isDemoMode ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                >
+                    <span className={`w-2 h-2 rounded-full ${!isDemoMode ? 'bg-white' : 'bg-emerald-500'}`} />
+                    Live Production
+                </button>
+                <button
+                    onClick={() => setIsDemoMode(true)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                        isDemoMode ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                >
+                    🧪 Demo Sandbox
+                </button>
+            </div>
+
             <button
                 onClick={() => setShowFilterBar(v => !v)}
                 className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${showFilterBar ? 'bg-blue-600 text-white border-blue-600' : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50'}`}
@@ -159,6 +239,13 @@ const TicketList = () => {
                     )}
                 </div>
 
+                {isDemoMode && (
+                    <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-xs font-medium">
+                        <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+                        <span><strong>DEMO SANDBOX ACTIVE:</strong> Showing 4 simulated campus drill incidents for presentation. Live student submissions are preserved in Live Production mode.</span>
+                    </div>
+                )}
+
                 {error && (
                     <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
                         <AlertTriangle size={16} />
@@ -168,6 +255,20 @@ const TicketList = () => {
 
                 {loading ? (
                     <Spinner />
+                ) : clusters.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center bg-white border border-slate-200 rounded-2xl py-16 px-6 text-center text-slate-500 shadow-sm">
+                        <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+                            <CheckCircle2 size={32} />
+                        </div>
+                        <p className="font-bold text-base text-slate-800">Triage Queue Clean — Zero Active Student Complaints</p>
+                        <p className="text-xs text-slate-500 mt-1 max-w-md">Connected to Central Engine. Real complaints filed by verified students will appear here in real time with AI priority scoring.</p>
+                        <button
+                            onClick={() => setIsDemoMode(true)}
+                            className="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-700 border border-amber-300 hover:bg-amber-500/20 transition"
+                        >
+                            🧪 Switch to Demo Sandbox (Presentation Mode)
+                        </button>
+                    </div>
                 ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center bg-white border border-slate-200 rounded-xl py-16 text-slate-400">
                         <InboxIcon size={40} className="mb-3" />

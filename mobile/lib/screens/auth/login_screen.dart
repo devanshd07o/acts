@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_routes.dart';
+import '../../config/api_constants.dart';
 import '../../config/theme.dart';
 import '../../services/api_client.dart';
 import '../../services/auth_service.dart';
@@ -180,12 +181,31 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             googleUser.email.contains('admin') ||
             googleUser.email.contains('dispatch');
 
+        // Step-2 Mandatory ID Verification (University Roll No for Student / Faculty Code for Admin)
+        final idResult = await _showStep2VerificationDialog(
+          context: context,
+          isAdmin: isAdmin,
+          email: googleUser.email,
+          fullName: googleUser.name,
+        );
+
+        if (idResult == null) {
+          // User cancelled verification dialog
+          if (mounted) setState(() => _isGoogleLoading = false);
+          return;
+        }
+
+        final rollNo = idResult['roll_no'] ?? '';
+        final employeeId = idResult['employee_id'] ?? '';
+
         try {
           await _apiClient.loginWithGoogle(
             email: googleUser.email,
             fullName: googleUser.name,
             photoUrl: googleUser.picture,
             role: isAdmin ? 'admin' : 'student',
+            rollNo: rollNo,
+            employeeId: employeeId,
           );
         } catch (_) {
           // Fallback offline session if backend unreachable
@@ -199,6 +219,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             email: googleUser.email,
             photoUrl: googleUser.picture,
             isAdmin: isAdmin,
+            rollNo: rollNo,
+            employeeId: employeeId,
           );
         }
 
@@ -217,6 +239,378 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     } finally {
       if (mounted) setState(() => _isGoogleLoading = false);
     }
+  }
+
+  // --- STEP 2 ID VERIFICATION DIALOG ---
+  Future<Map<String, String>?> _showStep2VerificationDialog({
+    required BuildContext context,
+    required bool isAdmin,
+    required String email,
+    required String fullName,
+  }) async {
+    final rollCtrl = TextEditingController(text: isAdmin ? '' : '2100320100045');
+    final empCtrl = TextEditingController(text: isAdmin ? 'EMP-2026-1049' : '');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return showDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF0F1420) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: (isAdmin ? const Color(0xFFF59E0B) : const Color(0xFF2563EB)).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      isAdmin ? Icons.badge_outlined : Icons.school_outlined,
+                      color: isAdmin ? const Color(0xFFF59E0B) : const Color(0xFF2563EB),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isAdmin ? "Step 2: Operations Staff Verification" : "Step 2: University ID Verification",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          "Google: $email",
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 440,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isAdmin
+                          ? "Enter your official Faculty / Employee ID code to unlock administrative dispatch permissions."
+                          : "Enter your 12-digit University Roll Number to link campus reporting identity.",
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (!isAdmin) ...[
+                      Text(
+                        "University Roll Number (12 Digits)",
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: rollCtrl,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "e.g. 2100320100045",
+                          prefixIcon: const Icon(Icons.numbers_rounded, size: 18),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF070A11) : const Color(0xFFF8FAFC),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () {
+                          setDialogState(() {
+                            rollCtrl.text = "2100320100045";
+                          });
+                        },
+                        child: const Text(
+                          "💡 Tap to use Demo Roll No: 2100320100045",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2563EB),
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      Text(
+                        "Faculty / Employee ID Code",
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: empCtrl,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "e.g. EMP-2026-1049",
+                          prefixIcon: const Icon(Icons.badge_outlined, size: 18),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF070A11) : const Color(0xFFF8FAFC),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () {
+                          setDialogState(() {
+                            empCtrl.text = "EMP-2026-1049";
+                          });
+                        },
+                        child: const Text(
+                          "💡 Tap to use Demo Staff ID: EMP-2026-1049",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFF59E0B),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, null),
+                  child: const Text("Cancel"),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: isAdmin ? const Color(0xFFF59E0B) : const Color(0xFF2563EB),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    final roll = rollCtrl.text.trim();
+                    final emp = empCtrl.text.trim();
+                    if (!isAdmin && roll.isEmpty) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text("Please enter a valid student roll number.")),
+                      );
+                      return;
+                    }
+                    if (isAdmin && emp.isEmpty) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text("Please enter a faculty/employee code.")),
+                      );
+                      return;
+                    }
+                    Navigator.pop(ctx, {
+                      'roll_no': roll,
+                      'employee_id': emp,
+                    });
+                  },
+                  child: const Text("Verify & Enter Portal", style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // --- SERVER & MOBILE NETWORK SYNC CONFIG DIALOG ---
+  Future<void> _showServerConfigDialog(BuildContext context) async {
+    final current = ApiConstants.baseUrl;
+    final urlCtrl = TextEditingController(text: current);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    String pingStatus = "";
+    bool pingLoading = false;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF0F1420) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              title: const Row(
+                children: [
+                  Icon(Icons.dns_rounded, color: Color(0xFF2563EB), size: 22),
+                  SizedBox(width: 10),
+                  Text("Server & Mobile Sync Setup", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                ],
+              ),
+              content: SizedBox(
+                width: 440,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "To connect a physical phone or external device on the same Wi-Fi, point to your computer's local IP address.",
+                      style: TextStyle(fontSize: 12.5, height: 1.4),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text("Server Base URL:", style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: urlCtrl,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      decoration: InputDecoration(
+                        hintText: "http://10.33.196.57:8000",
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF070A11) : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text("Quick Presets:", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        ActionChip(
+                          label: const Text("Wi-Fi Sync (10.33.196.57:8000)", style: TextStyle(fontSize: 11)),
+                          onPressed: () {
+                            setDialogState(() {
+                              urlCtrl.text = "http://10.33.196.57:8000";
+                            });
+                          },
+                        ),
+                        ActionChip(
+                          label: const Text("Localhost (127.0.0.1:8000)", style: TextStyle(fontSize: 11)),
+                          onPressed: () {
+                            setDialogState(() {
+                              urlCtrl.text = "http://127.0.0.1:8000";
+                            });
+                          },
+                        ),
+                        ActionChip(
+                          label: const Text("Android Emulator (10.0.2.2:8000)", style: TextStyle(fontSize: 11)),
+                          onPressed: () {
+                            setDialogState(() {
+                              urlCtrl.text = "http://10.0.2.2:8000";
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        OutlinedButton.icon(
+                          icon: pingLoading
+                              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.network_ping_rounded, size: 16),
+                          label: const Text("Test Ping", style: TextStyle(fontSize: 12)),
+                          onPressed: pingLoading
+                              ? null
+                              : () async {
+                                  setDialogState(() {
+                                    pingLoading = true;
+                                    pingStatus = "Pinging...";
+                                  });
+                                  try {
+                                    final res = await _apiClient.fetchHealth();
+                                    setDialogState(() {
+                                      pingStatus = res ? "Online: Server healthy (200 OK)" : "Offline: Unexpected response";
+                                    });
+                                  } catch (e) {
+                                    setDialogState(() {
+                                      pingStatus = "Connection Failed: $e";
+                                    });
+                                  } finally {
+                                    setDialogState(() {
+                                      pingLoading = false;
+                                    });
+                                  }
+                                },
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            pingStatus,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: pingStatus.contains("Online") ? const Color(0xFF10B981) : Colors.red,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text("Cancel"),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    await AuthService().setCustomBaseUrl(urlCtrl.text.trim());
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  child: const Text("Save & Apply"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   // --- REAL MANUAL LOGIN HANDLER (CONNECTS TO DJANGO) ---
@@ -410,14 +804,28 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             ],
           ),
 
-          IconButton(
-            tooltip: "Toggle Light/Dark Theme",
-            onPressed: () => ThemeService().toggleTheme(context),
-            icon: Icon(
-              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-              size: 20,
-              color: isDark ? AppTheme.signalAmber : const Color(0xFFF97316),
-            ),
+          Row(
+            children: [
+              IconButton(
+                tooltip: "Server & Mobile Sync Setup",
+                onPressed: () => _showServerConfigDialog(context),
+                icon: Icon(
+                  Icons.dns_rounded,
+                  size: 20,
+                  color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                tooltip: "Toggle Light/Dark Theme",
+                onPressed: () => ThemeService().toggleTheme(context),
+                icon: Icon(
+                  isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                  size: 20,
+                  color: isDark ? AppTheme.signalAmber : const Color(0xFFF97316),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -76,6 +76,8 @@ class _AdminTicketsScreenState extends State<AdminTicketsScreen> {
     },
   ];
 
+  bool _isDemoMode = false;
+
   @override
   void initState() {
     super.initState();
@@ -83,15 +85,20 @@ class _AdminTicketsScreenState extends State<AdminTicketsScreen> {
   }
 
   void _loadClusters() {
-    _clustersFuture = _fetchClustersWithFallback();
+    if (_isDemoMode) {
+      _clustersFuture = Future.value(List<Map<String, dynamic>>.from(_seedClusters));
+    } else {
+      _clustersFuture = _fetchLiveClusters();
+    }
   }
 
-  Future<List<dynamic>> _fetchClustersWithFallback() async {
+  Future<List<dynamic>> _fetchLiveClusters() async {
     try {
       final res = await _apiClient.fetchAdminClusters();
-      if (res.isNotEmpty) return res;
-    } catch (_) {}
-    return _seedClusters;
+      return res; // Real data only. Returns [] if no tickets.
+    } catch (e) {
+      return []; // Clean empty state on error, never inject fake seed data
+    }
   }
 
   Future<void> _refresh() async {
@@ -112,6 +119,98 @@ class _AdminTicketsScreenState extends State<AdminTicketsScreen> {
       title: 'Triage Tickets & Crowd Clusters',
       currentRoute: AppRoutes.adminTickets,
       actions: [
+        // Live vs Demo Sandbox Segmented Toggle
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(7),
+                onTap: () {
+                  if (_isDemoMode) {
+                    setState(() {
+                      _isDemoMode = false;
+                      _loadClusters();
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: !_isDemoMode ? const Color(0xFF10B981) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.fiber_manual_record_rounded,
+                        size: 9,
+                        color: !_isDemoMode ? Colors.white : const Color(0xFF10B981),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Live Production',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: !_isDemoMode ? Colors.white : textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(7),
+                onTap: () {
+                  if (!_isDemoMode) {
+                    setState(() {
+                      _isDemoMode = true;
+                      _loadClusters();
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _isDemoMode ? const Color(0xFFF59E0B) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.science_outlined,
+                        size: 11,
+                        color: _isDemoMode ? Colors.white : const Color(0xFFF59E0B),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Demo Sandbox',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: _isDemoMode ? Colors.white : textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
         IconButton(
           icon: const Icon(Icons.refresh_rounded),
           tooltip: 'Refresh Queue',
@@ -125,9 +224,7 @@ class _AdminTicketsScreenState extends State<AdminTicketsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final allClusters = (snapshot.data != null && snapshot.data!.isNotEmpty)
-              ? snapshot.data!
-              : _seedClusters;
+          final allClusters = snapshot.data ?? [];
 
           // Filter by status & search
           final filtered = allClusters.where((c) {
@@ -180,10 +277,99 @@ class _AdminTicketsScreenState extends State<AdminTicketsScreen> {
                 // Search & Filter Toolbar
                 _buildFilterBar(isDark),
 
-                const SizedBox(height: 16),
+                if (_isDemoMode)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFFF59E0B)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'DEMO SANDBOX ACTIVE: Showing 4 simulated campus drill incidents for demonstration. Real live submissions are preserved in Live Production mode.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                 // Tickets List
-                if (filtered.isEmpty)
+                if (allClusters.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 24),
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 48,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          'Triage Queue Clean — 0 Active Student Complaints',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          child: Text(
+                            'Connected to Central Engine. As soon as a student submits a civic or maintenance issue, it will be triaged with Gemini AI & YOLO vision and immediately appear here.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: textMuted,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.science_outlined, size: 16),
+                          label: const Text('View Demo Sandbox (Simulated Feed)'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFF59E0B),
+                            side: const BorderSide(color: Color(0xFFF59E0B)),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isDemoMode = true;
+                              _loadClusters();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                else if (filtered.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(40),
                     alignment: Alignment.center,
@@ -193,7 +379,7 @@ class _AdminTicketsScreenState extends State<AdminTicketsScreen> {
                         Icon(Icons.search_off_rounded, size: 48, color: textMuted),
                         const SizedBox(height: 12),
                         Text(
-                          'No tickets match the selected filters.',
+                          'No tickets match the selected status or query.',
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textMuted),
                         ),
                       ],
