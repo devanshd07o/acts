@@ -1258,22 +1258,37 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode, i
     const inp = st.input;
 
     const onMouseDown = (e) => {
-      if (cameraModeRef.current !== 'orbit') return;
       if (e.button !== 0) return;
       inp.isDragging = true;
       inp.lastX = e.clientX;
       inp.lastY = e.clientY;
       inp.velX = 0; inp.velY = 0;
+
+      if (cameraModeRef.current === 'firstperson') {
+        renderer.domElement.requestPointerLock?.();
+      }
     };
 
     const onMouseMove = (e) => {
       if (cameraModeRef.current === 'firstperson') {
-        if (!inp.pointerLocked) return;
-        const dx = e.movementX || 0;
-        const dy = e.movementY || 0;
+        let dx = 0;
+        let dy = 0;
+        if (inp.pointerLocked) {
+          dx = e.movementX || 0;
+          dy = e.movementY || 0;
+        } else if (inp.isDragging) {
+          dx = e.clientX - inp.lastX;
+          dy = e.clientY - inp.lastY;
+          inp.lastX = e.clientX;
+          inp.lastY = e.clientY;
+        } else {
+          return;
+        }
+
         const fps = st.fps;
-        fps.yaw -= dx * 0.0022;
-        fps.pitch = Math.max(-1.1, Math.min(0.5, fps.pitch - dy * 0.0022));
+        fps.yaw -= dx * 0.0024;
+        // Natural FPS look: moving mouse UP (dy < 0) tilts camera UP (+), mouse DOWN (dy > 0) tilts camera DOWN (-)
+        fps.pitch = Math.max(-1.15, Math.min(1.15, fps.pitch - dy * 0.0024));
         return;
       }
       if (!inp.isDragging) return;
@@ -1404,39 +1419,65 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode, i
       // Camera Modes
       if (mode === 'firstperson') {
         const isSprinting = inp.keys['ShiftLeft'] || inp.keys['ShiftRight'];
-        const sp = (isSprinting ? 2.4 : 1.1) * dt;
+        const targetSpeed = isSprinting ? 2.6 : 1.3;
         const fwdX = -Math.sin(fps.yaw);
         const fwdZ = -Math.cos(fps.yaw);
         const rgtX = Math.cos(fps.yaw);
         const rgtZ = -Math.sin(fps.yaw);
 
-        let moveX = 0;
-        let moveZ = 0;
+        let inputX = 0;
+        let inputZ = 0;
 
-        if (inp.keys['KeyW'] || inp.keys['ArrowUp'])   { moveX += fwdX * sp; moveZ += fwdZ * sp; }
-        if (inp.keys['KeyS'] || inp.keys['ArrowDown']) { moveX -= fwdX * sp; moveZ -= fwdZ * sp; }
-        if (inp.keys['KeyA'] || inp.keys['ArrowLeft']) { moveX -= rgtX * sp; moveZ -= rgtZ * sp; }
-        if (inp.keys['KeyD'] || inp.keys['ArrowRight']){ moveX += rgtX * sp; moveZ += rgtZ * sp; }
+        if (inp.keys['KeyW'] || inp.keys['ArrowUp'])   { inputX += fwdX; inputZ += fwdZ; }
+        if (inp.keys['KeyS'] || inp.keys['ArrowDown']) { inputX -= fwdX; inputZ -= fwdZ; }
+        if (inp.keys['KeyA'] || inp.keys['ArrowLeft']) { inputX -= rgtX; inputZ -= rgtZ; }
+        if (inp.keys['KeyD'] || inp.keys['ArrowRight']){ inputX += rgtX; inputZ += rgtZ; }
+
+        // Normalize input vector so diagonals don't move faster
+        const inputLen = Math.hypot(inputX, inputZ);
+        if (inputLen > 0.001) {
+          inputX = (inputX / inputLen) * targetSpeed;
+          inputZ = (inputZ / inputLen) * targetSpeed;
+        }
+
+        // Smooth acceleration and ground friction physics
+        fps.vx = (fps.vx || 0) * 0.84 + inputX * 0.16;
+        fps.vz = (fps.vz || 0) * 0.84 + inputZ * 0.16;
+
+        const moveX = fps.vx * dt;
+        const moveZ = fps.vz * dt;
 
         // Axis-separated collision test to allow smooth wall sliding
-        if (moveX !== 0) {
+        if (Math.abs(moveX) > 0.0001) {
           const testX = fps.x + moveX;
           if (!isPlayerColliding(testX, fps.z)) {
             fps.x = testX;
+          } else {
+            fps.vx = 0;
           }
         }
-        if (moveZ !== 0) {
+        if (Math.abs(moveZ) > 0.0001) {
           const testZ = fps.z + moveZ;
           if (!isPlayerColliding(fps.x, testZ)) {
             fps.z = testZ;
+          } else {
+            fps.vz = 0;
           }
         }
 
         // Failsafe clamp inside campus bounds
-        fps.x = Math.max(CAMPUS_BOUNDS.minX + 1.0, Math.min(CAMPUS_BOUNDS.maxX - 1.0, fps.x));
-        fps.z = Math.max(CAMPUS_BOUNDS.minZ + 1.0, Math.min(CAMPUS_BOUNDS.maxZ - 1.0, fps.z));
+        fps.x = Math.max(CAMPUS_BOUNDS.minX + 2.0, Math.min(CAMPUS_BOUNDS.maxX - 2.0, fps.x));
+        fps.z = Math.max(CAMPUS_BOUNDS.minZ + 2.0, Math.min(CAMPUS_BOUNDS.maxZ - 2.0, fps.z));
 
-        fps.y = 4.8; // Realistic eye level
+        // Walking head-bobbing physics
+        const currentSpeed = Math.hypot(fps.vx || 0, fps.vz || 0);
+        if (currentSpeed > 0.1) {
+          fps.walkBob = (fps.walkBob || 0) + currentSpeed * 0.18 * dt;
+        } else {
+          fps.walkBob = (fps.walkBob || 0) * 0.85;
+        }
+        fps.y = 4.8 + Math.sin(fps.walkBob || 0) * 0.14;
+
         camera.position.set(fps.x, fps.y, fps.z);
         camera.rotation.order = 'YXZ';
         camera.rotation.y = fps.yaw;
@@ -1618,6 +1659,33 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode, i
           );
         })}
       </div>
+
+      {/* First-person crosshair & control hint */}
+      {cameraMode === 'firstperson' && (
+        <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-between p-6 select-none" style={{ zIndex: 12 }}>
+          {/* Top Control Bar */}
+          <div className="px-4 py-2 rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-700/60 text-white text-xs font-medium shadow-lg flex items-center gap-3">
+            <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 font-mono text-[10px]">W</kbd><kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 font-mono text-[10px]">A</kbd><kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 font-mono text-[10px]">S</kbd><kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 font-mono text-[10px]">D</kbd> Walk</span>
+            <span className="text-slate-500">•</span>
+            <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 font-mono text-[10px]">Shift</kbd> Sprint</span>
+            <span className="text-slate-500">•</span>
+            <span>🖱️ Click & Drag to Look</span>
+            <span className="text-slate-500">•</span>
+            <span><kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 font-mono text-[10px]">ESC</kbd> Unlock Cursor</span>
+          </div>
+
+          {/* Centered Dynamic Crosshair */}
+          <div className="w-3.5 h-3.5 relative flex items-center justify-center pointer-events-none opacity-80">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 ring-2 ring-black/40" />
+            <div className="absolute -top-2 w-0.5 h-1.5 bg-cyan-400/70" />
+            <div className="absolute -bottom-2 w-0.5 h-1.5 bg-cyan-400/70" />
+            <div className="absolute -left-2 w-1.5 h-0.5 bg-cyan-400/70" />
+            <div className="absolute -right-2 w-1.5 h-0.5 bg-cyan-400/70" />
+          </div>
+
+          <div />
+        </div>
+      )}
     </div>
   );
 }

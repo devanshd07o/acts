@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -27,6 +28,7 @@ class _NewQueryViewState extends State<NewQueryView> {
   final AiTriageService _aiService = AiTriageService();
 
   final TextEditingController _notesController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
 
   XFile? _selectedImage;
@@ -40,7 +42,6 @@ class _NewQueryViewState extends State<NewQueryView> {
   AiTriageAnalysis? _aiAnalysis;
   bool _isAnalyzing = false;
   bool _isSubmitting = false;
-  bool _isVoiceRecording = false;
 
   // Stored answers for the 3-4 gap-filling questions
   final Map<String, String> _questionAnswers = {};
@@ -61,6 +62,7 @@ class _NewQueryViewState extends State<NewQueryView> {
   void dispose() {
     _debounceTimer?.cancel();
     _notesController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -164,18 +166,56 @@ class _NewQueryViewState extends State<NewQueryView> {
     });
   }
 
-  void _toggleVoiceDictation() {
-    setState(() {
-      _isVoiceRecording = !_isVoiceRecording;
-    });
+  void _openVoiceModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _VoiceDictationModal(
+        initialText: _notesController.text,
+        onConfirmed: (text) {
+          _applyVoicePreset(text);
+        },
+      ),
+    );
   }
 
   void _applyVoicePreset(String text) {
     _notesController.text = text;
     _notesController.selection = TextSelection.fromPosition(TextPosition(offset: text.length));
-    setState(() => _isVoiceRecording = false);
     _triggerAiAnalysis();
     _checkDuplicateComplaints();
+
+    // Auto-scroll to Section 3 so user immediately sees AI Triage & Gap Questions
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          420,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF2563EB),
+        duration: const Duration(seconds: 3),
+        content: Row(
+          children: [
+            const Icon(Icons.psychology_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                "Voice recorded! AI Triage analyzing defect & generating gap questions...",
+                style: GoogleFonts.comfortaa(fontWeight: FontWeight.w700, fontSize: 11),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _pickImage() async {
@@ -348,6 +388,7 @@ class _NewQueryViewState extends State<NewQueryView> {
     final cardBg = isDark ? const Color(0xFF141A26) : Colors.white;
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -746,44 +787,36 @@ class _NewQueryViewState extends State<NewQueryView> {
                   ),
                 ],
               ),
-              // Voice Input / Dictation Action Button
+              // Voice AI Dictation Header Action Button
               InkWell(
-                onTap: _toggleVoiceDictation,
-                borderRadius: BorderRadius.circular(10),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                onTap: _openVoiceModal,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: _isVoiceRecording
-                        ? const Color(0xFFEF4444).withValues(alpha: 0.15)
-                        : (isDark ? const Color(0xFF1E283C) : const Color(0xFFF1F5F9)),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _isVoiceRecording
-                          ? const Color(0xFFEF4444)
-                          : (isDark ? const Color(0xFF28364F) : const Color(0xFFCBD5E1)),
-                      width: 1.2,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2563EB), Color(0xFF7C3AED)],
                     ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        _isVoiceRecording ? Icons.mic_rounded : Icons.mic_none_rounded,
-                        size: 16,
-                        color: _isVoiceRecording
-                            ? const Color(0xFFEF4444)
-                            : (isDark ? Colors.white70 : const Color(0xFF475569)),
-                      ),
+                      const Icon(Icons.mic_rounded, size: 16, color: Colors.white),
                       const SizedBox(width: 6),
                       Text(
-                        _isVoiceRecording ? "Listening..." : "Voice Input",
+                        "Open Voice AI Mic",
                         style: GoogleFonts.comfortaa(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: _isVoiceRecording
-                              ? const Color(0xFFEF4444)
-                              : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
                         ),
                       ),
                     ],
@@ -794,96 +827,129 @@ class _NewQueryViewState extends State<NewQueryView> {
           ),
           const SizedBox(height: 14),
 
-          // Active Voice Dictation Banner & Quick Voice Transcripts
-          if (_isVoiceRecording) ...[
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEF4444).withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.25)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          // Rapid Voice Scenarios (Always accessible for instant triage)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFEF4444),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Audio Dictation Active — Speak or tap quick phrase below",
-                            style: GoogleFonts.comfortaa(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFFEF4444),
-                            ),
-                          ),
-                        ],
-                      ),
-                      InkWell(
-                        onTap: () => setState(() => _isVoiceRecording = false),
-                        child: Text(
-                          "Done",
+                  Text(
+                    "QUICK VOICE SCENARIOS (1-TAP AUTO-TRANSCRIBE)",
+                    style: GoogleFonts.comfortaa(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.1,
+                      color: const Color(0xFF2563EB),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: _openVoiceModal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.mic_rounded, size: 13, color: Color(0xFFEF4444)),
+                        const SizedBox(width: 4),
+                        Text(
+                          "Live Voice Sheet",
                           style: GoogleFonts.comfortaa(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
                             color: const Color(0xFFEF4444),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      "💧 Washroom me pipe burst ho gaya hai, poora floor flood ho raha hai",
-                      "⚡ 2nd floor staircase par exposed electrical wire se spark nikal raha hai",
-                      "🚧 Main gate approach road par gehra pothole hai, urgent repair chahiye",
-                      "🕳️ Admin block ke peeche open sewer manhole bina cover ke dangerous hai",
-                      "🗑️ Hostel mess ke paas garbage bin overflow ho gaya hai, foul smell aa rahi hai",
-                      "💡 Library block ke samne street light kharab hai, andhera rehta hai",
-                    ].map((phrase) {
-                      return InkWell(
-                        onTap: () => _applyVoicePreset(phrase),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF141A26) : Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isDark ? const Color(0xFF28364F) : const Color(0xFFE2E8F0),
-                            ),
-                          ),
-                          child: Text(
-                            phrase,
-                            style: GoogleFonts.comfortaa(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white70 : const Color(0xFF334155),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  {
+                    "icon": Icons.bolt_rounded,
+                    "color": const Color(0xFFEF4444),
+                    "text": "2nd floor staircase par exposed electrical wire se spark nikal raha hai",
+                  },
+                  {
+                    "icon": Icons.water_drop_rounded,
+                    "color": const Color(0xFF0284C7),
+                    "text": "Washroom me pipe burst ho gaya hai, poora floor flood ho raha hai",
+                  },
+                  {
+                    "icon": Icons.traffic_rounded,
+                    "color": const Color(0xFFF59E0B),
+                    "text": "Main gate approach road par gehra pothole hai, urgent repair chahiye",
+                  },
+                  {
+                    "icon": Icons.warning_rounded,
+                    "color": const Color(0xFFDC2626),
+                    "text": "Admin block ke peeche open sewer manhole bina cover ke dangerous hai",
+                  },
+                  {
+                    "icon": Icons.delete_sweep_rounded,
+                    "color": const Color(0xFF10B981),
+                    "text": "Hostel mess ke paas garbage bin overflow ho gaya hai, foul smell aa rahi hai",
+                  },
+                  {
+                    "icon": Icons.lightbulb_outline_rounded,
+                    "color": const Color(0xFFEAB308),
+                    "text": "Library block ke samne street light kharab hai, andhera rehta hai",
+                  },
+                ].map((item) {
+                  final text = item['text'] as String;
+                  final icon = item['icon'] as IconData;
+                  final color = item['color'] as Color;
+                  return InkWell(
+                    onTap: () => _applyVoicePreset(text),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF141A26) : Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.35),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(icon, size: 14, color: color),
+                          const SizedBox(width: 6),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 420),
+                            child: Text(
+                              text,
+                              style: GoogleFonts.comfortaa(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? Colors.white : const Color(0xFF1E293B),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.arrow_forward_ios_rounded, size: 10, color: color),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
 
           Container(
             decoration: BoxDecoration(
@@ -901,13 +967,37 @@ class _NewQueryViewState extends State<NewQueryView> {
               ),
               decoration: InputDecoration(
                 hintText:
-                    "e.g., Water is leaking from the ceiling onto the 2nd-floor lab corridor, or exposed sparking cable near entrance...",
+                    "Describe defect or tap the Mic button to speak in Hindi/English...",
                 hintStyle: GoogleFonts.comfortaa(
                   fontSize: 11.5,
                   color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                 ),
                 contentPadding: const EdgeInsets.all(14),
                 border: InputBorder.none,
+                suffixIcon: Padding(
+                  padding: const EdgeInsets.only(right: 8, bottom: 8),
+                  child: IconButton(
+                    tooltip: "Open Voice AI Mic",
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2563EB), Color(0xFF7C3AED)],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.mic_rounded, color: Colors.white, size: 16),
+                    ),
+                    onPressed: _openVoiceModal,
+                  ),
+                ),
               ),
             ),
           ),
@@ -986,7 +1076,49 @@ class _NewQueryViewState extends State<NewQueryView> {
 
           const SizedBox(height: 16),
 
-          if (analysis != null) ...[
+          if (_isAnalyzing) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2563EB).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Analyzing Complaint with Neural Vision & Language AI...",
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "Synthesizing hazard signals, computing severity, and generating interactive gap questions.",
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 10.5,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else if (analysis != null) ...[
             // Diagnosis Banner Card
             Container(
               padding: const EdgeInsets.all(14),
@@ -1114,6 +1246,9 @@ class _NewQueryViewState extends State<NewQueryView> {
                       mainAxisSize: MainAxisSize.min,
                       children: ['Yes', 'No', 'Unsure'].map((choice) {
                         final isSelected = currentAnswer == choice;
+                        final activeColor = choice == 'Yes'
+                            ? const Color(0xFF10B981)
+                            : (choice == 'No' ? const Color(0xFFEF4444) : const Color(0xFFF59E0B));
                         return Padding(
                           padding: const EdgeInsets.only(left: 6),
                           child: InkWell(
@@ -1128,7 +1263,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFFF97316)
+                                    ? activeColor
                                     : (isDark ? const Color(0xFF222B3D) : const Color(0xFFE2E8F0)),
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -1151,6 +1286,72 @@ class _NewQueryViewState extends State<NewQueryView> {
                 ),
               );
             }),
+          ] else ...[
+            // Helpful Guide Card when empty
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF131B2A) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF97316).withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.psychology_rounded, color: Color(0xFFF97316), size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "AI Triage & Gap Questions Standing By",
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          "Tap the Mic or choose a Voice Scenario above — Autonomous AI will instantly classify defect, calculate severity (S1-S5), and display 3-4 interactive clarifying questions right here.",
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 10.5,
+                            color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ElevatedButton.icon(
+                          onPressed: _openVoiceModal,
+                          icon: const Icon(Icons.mic_rounded, color: Colors.white, size: 16),
+                          label: Text(
+                            "Record Voice Complaint (Dictate)",
+                            style: GoogleFonts.comfortaa(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2563EB),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ],
       ),
@@ -1355,3 +1556,514 @@ class _NewQueryViewState extends State<NewQueryView> {
     );
   }
 }
+
+class _VoiceDictationModal extends StatefulWidget {
+  final String initialText;
+  final ValueChanged<String> onConfirmed;
+
+  const _VoiceDictationModal({
+    required this.initialText,
+    required this.onConfirmed,
+  });
+
+  @override
+  State<_VoiceDictationModal> createState() => _VoiceDictationModalState();
+}
+
+class _VoiceDictationModalState extends State<_VoiceDictationModal> {
+  late TextEditingController _textCtrl;
+  Timer? _waveformTimer;
+  Timer? _secondTimer;
+  int _secondsElapsed = 0;
+  List<double> _waveBars = List.generate(24, (i) => 0.25);
+  final Random _rng = Random();
+
+  final List<Map<String, dynamic>> _voiceScenarios = [
+    {
+      "title": "Corridor Electrical Spark",
+      "icon": Icons.bolt_rounded,
+      "color": const Color(0xFFEF4444),
+      "badge": "ELECTRICAL • S5",
+      "text": "2nd floor staircase par exposed electrical wire se spark nikal raha hai, dangerous hazard hai",
+    },
+    {
+      "title": "Severe Pipe Burst & Flood",
+      "icon": Icons.water_drop_rounded,
+      "color": const Color(0xFF0284C7),
+      "badge": "PLUMBING • S5",
+      "text": "Ground floor washroom ka main water pipe burst ho gaya hai, poora corridor flood ho raha hai",
+    },
+    {
+      "title": "Dangerous Road Pothole",
+      "icon": Icons.traffic_rounded,
+      "color": const Color(0xFFF59E0B),
+      "badge": "CIVIL • S3",
+      "text": "Campus main gate approach road par gehra pothole hai, do-wheeler slip ho rahe hain",
+    },
+    {
+      "title": "Dark Street Lights / Corridor",
+      "icon": Icons.lightbulb_outline_rounded,
+      "color": const Color(0xFF8B5CF6),
+      "badge": "ELECTRICAL • S3",
+      "text": "Hostel road aur parking area ki lights completely off hain, bohot andhera hai",
+    },
+    {
+      "title": "Sanitation & Waste Overflow",
+      "icon": Icons.delete_sweep_rounded,
+      "color": const Color(0xFF10B981),
+      "badge": "SANITATION • S2",
+      "text": "Cafeteria ke paas dustbin overflow ho raha hai aur foul smell aa rahi hai",
+    },
+    {
+      "title": "Broken Door Lock / Latch",
+      "icon": Icons.door_front_door_rounded,
+      "color": const Color(0xFFEC4899),
+      "badge": "CIVIL • S2",
+      "text": "Academic block Room 302 ka door latch broken hai, band nahi ho raha",
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _textCtrl = TextEditingController(text: widget.initialText);
+
+    // Animate waveform audio bars in real-time
+    _waveformTimer = Timer.periodic(const Duration(milliseconds: 120), (timer) {
+      if (!mounted) return;
+      setState(() {
+        _waveBars = List.generate(24, (i) => 0.15 + (_rng.nextDouble() * 0.85));
+      });
+    });
+
+    _secondTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      setState(() {
+        _secondsElapsed++;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _waveformTimer?.cancel();
+    _secondTimer?.cancel();
+    _textCtrl.dispose();
+    super.dispose();
+  }
+
+  void _selectScenario(String text) {
+    setState(() {
+      _textCtrl.text = text;
+      _textCtrl.selection = TextSelection.fromPosition(TextPosition(offset: text.length));
+    });
+  }
+
+  void _confirmAndAnalyze() {
+    final text = _textCtrl.text.trim();
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please speak or pick a scenario first", style: GoogleFonts.comfortaa()),
+        ),
+      );
+      return;
+    }
+    Navigator.of(context).pop();
+    widget.onConfirmed(text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF0F172A) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.88,
+        maxWidth: 750,
+      ),
+      margin: const EdgeInsets.only(top: 30),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 30,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 8),
+            width: 44,
+            height: 5,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white24 : Colors.black26,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFEF4444).withValues(alpha: 0.4),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.mic_rounded, color: Colors.white, size: 18),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "ACTS Voice AI Dictation",
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          "Neural speech transcription & defect intake",
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 10.5,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        "00:${_secondsElapsed.toString().padLeft(2, '0')}",
+                        style: GoogleFonts.comfortaa(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFFEF4444),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Audio Waveform Visualizer Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                            : [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0)],
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Column(
+                      children: [
+                        // Soundwave Bars
+                        SizedBox(
+                          height: 52,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: _waveBars.map((val) {
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 100),
+                                margin: const EdgeInsets.symmetric(horizontal: 2.2),
+                                width: 4.5,
+                                height: (val * 48).clamp(8.0, 48.0),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [Color(0xFF2563EB), Color(0xFFEF4444)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "🎙️ Listening actively... Speak in Hindi or English, or pick a scenario below",
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Real-time Speech Transcript Field
+                  Text(
+                    "TRANSCRIBED COMPLAINT TEXT (EDITABLE)",
+                    style: GoogleFonts.comfortaa(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.1,
+                      color: const Color(0xFF2563EB),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: TextField(
+                      controller: _textCtrl,
+                      maxLines: 2,
+                      style: GoogleFonts.comfortaa(
+                        fontSize: 12.5,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                      decoration: InputDecoration(
+                        hintText: "Transcribed speech will appear here...",
+                        hintStyle: GoogleFonts.comfortaa(
+                          fontSize: 11.5,
+                          color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                        ),
+                        contentPadding: const EdgeInsets.all(12),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // 1-Tap Incident Presets (Hinglish / English)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "RAPID INCIDENT PRESETS (1-TAP AUTO-TRANSCRIBE)",
+                        style: GoogleFonts.comfortaa(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
+                          color: const Color(0xFFF97316),
+                        ),
+                      ),
+                      Text(
+                        "Click any to populate",
+                        style: GoogleFonts.comfortaa(
+                          fontSize: 9.5,
+                          color: isDark ? Colors.white54 : Colors.black45,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  ..._voiceScenarios.map((sc) {
+                    final color = sc['color'] as Color;
+                    final icon = sc['icon'] as IconData;
+                    final text = sc['text'] as String;
+                    final badge = sc['badge'] as String;
+                    final title = sc['title'] as String;
+                    final isSelected = _textCtrl.text == text;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: InkWell(
+                        onTap: () => _selectScenario(text),
+                        borderRadius: BorderRadius.circular(12),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? color.withValues(alpha: 0.12)
+                                : cardBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? color : borderColor,
+                              width: isSelected ? 1.8 : 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(icon, color: color, size: 18),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          title,
+                                          style: GoogleFonts.comfortaa(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: color.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            badge,
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w800,
+                                              color: color,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      text,
+                                      style: GoogleFonts.comfortaa(
+                                        fontSize: 10.5,
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                isSelected ? Icons.check_circle_rounded : Icons.touch_app_rounded,
+                                color: isSelected ? color : (isDark ? Colors.white38 : Colors.black26),
+                                size: 18,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+
+          // Bottom Action Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: bg,
+              border: Border(top: BorderSide(color: borderColor)),
+            ),
+            child: Row(
+              children: [
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text("Cancel", style: GoogleFonts.comfortaa(fontWeight: FontWeight.w700)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _confirmAndAnalyze,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: const Color(0xFF2563EB),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 4,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Confirm Voice & Run AI Triage ⚡",
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
