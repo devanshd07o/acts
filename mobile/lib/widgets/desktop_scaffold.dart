@@ -72,35 +72,50 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
         body: widget.body,
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          currentIndex: _getNavIndex(widget.currentRoute),
-          selectedItemColor: const Color(0xFF2563EB),
+          currentIndex: _getNavIndex(widget.currentRoute, isAdmin),
+          selectedItemColor: isAdmin ? const Color(0xFFF59E0B) : const Color(0xFF2563EB),
           unselectedItemColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
           backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
           selectedFontSize: 11,
           unselectedFontSize: 11,
-          onTap: (index) => _onNavTapped(context, index),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.grid_view_rounded),
-              label: 'Overview',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle_outline_rounded),
-              label: 'Report',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.map_outlined),
-              label: 'Map',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.inbox_outlined),
-              label: 'Tickets',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.history_rounded),
-              label: 'Activity',
-            ),
-          ],
+          onTap: (index) => _onNavTapped(context, index, isAdmin),
+          items: isAdmin
+              ? const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.inbox_outlined),
+                    label: 'Triage Queue',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.map_outlined),
+                    label: 'Tactical Map',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.view_in_ar_rounded),
+                    label: '3D Twin',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.analytics_outlined),
+                    label: 'Analytics',
+                  ),
+                ]
+              : const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.home_rounded),
+                    label: 'Home',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.add_circle_outline_rounded),
+                    label: 'Report',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.assignment_outlined),
+                    label: 'My Reports',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.view_in_ar_rounded),
+                    label: '3D Twin',
+                  ),
+                ],
         ),
         floatingActionButton: widget.floatingActionButton,
       );
@@ -518,20 +533,20 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
       const SizedBox(height: 6),
       _navPillItem(
         context: context,
-        icon: Icons.inbox_outlined,
-        label: 'Ticket Queue',
-        route: AppRoutes.adminTickets,
-        isActive: widget.currentRoute == AppRoutes.adminTickets,
+        icon: Icons.assignment_outlined,
+        label: 'My Reports',
+        route: AppRoutes.myReports,
+        isActive: widget.currentRoute == AppRoutes.myReports,
         isExpanded: isExpanded,
         isDark: isDark,
       ),
       const SizedBox(height: 6),
       _navPillItem(
         context: context,
-        icon: Icons.history_rounded,
-        label: 'My Reports',
-        route: AppRoutes.myReports,
-        isActive: widget.currentRoute == AppRoutes.myReports,
+        icon: Icons.view_in_ar_rounded,
+        label: 'Campus 3D Twin',
+        route: AppRoutes.campus3DTwin,
+        isActive: widget.currentRoute == AppRoutes.campus3DTwin,
         isExpanded: isExpanded,
         isDark: isDark,
       ),
@@ -542,18 +557,8 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
     return [
       _navPillItem(
         context: context,
-        icon: Icons.grid_view_rounded,
-        label: 'Overview',
-        route: AppRoutes.home,
-        isActive: widget.currentRoute == AppRoutes.home,
-        isExpanded: isExpanded,
-        isDark: isDark,
-      ),
-      const SizedBox(height: 6),
-      _navPillItem(
-        context: context,
         icon: Icons.inbox_outlined,
-        label: 'Ticket Queue',
+        label: 'Triage Queue',
         route: AppRoutes.adminTickets,
         isActive: widget.currentRoute == AppRoutes.adminTickets,
         isExpanded: isExpanded,
@@ -563,7 +568,7 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
       _navPillItem(
         context: context,
         icon: Icons.map_outlined,
-        label: 'Campus Map',
+        label: 'Tactical GIS Map',
         route: AppRoutes.adminMap,
         isActive: widget.currentRoute == AppRoutes.adminMap,
         isExpanded: isExpanded,
@@ -572,20 +577,30 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
       const SizedBox(height: 6),
       _navPillItem(
         context: context,
-        icon: Icons.add_circle_outline_rounded,
-        label: 'Report Issue',
-        route: AppRoutes.reportIssue,
-        isActive: widget.currentRoute == AppRoutes.reportIssue,
+        icon: Icons.view_in_ar_rounded,
+        label: 'Campus 3D Twin',
+        route: AppRoutes.campus3DTwin,
+        isActive: widget.currentRoute == AppRoutes.campus3DTwin,
         isExpanded: isExpanded,
         isDark: isDark,
       ),
       const SizedBox(height: 6),
       _navPillItem(
         context: context,
-        icon: Icons.history_rounded,
-        label: 'My Reports',
-        route: AppRoutes.myReports,
-        isActive: widget.currentRoute == AppRoutes.myReports,
+        icon: Icons.analytics_outlined,
+        label: 'Analytics & Health',
+        route: AppRoutes.analytics,
+        isActive: widget.currentRoute == AppRoutes.analytics,
+        isExpanded: isExpanded,
+        isDark: isDark,
+      ),
+      const SizedBox(height: 6),
+      _navPillItem(
+        context: context,
+        icon: Icons.switch_account_outlined,
+        label: 'Student View',
+        route: AppRoutes.home,
+        isActive: widget.currentRoute == AppRoutes.home,
         isExpanded: isExpanded,
         isDark: isDark,
       ),
@@ -666,43 +681,70 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
     );
   }
 
-  void _onNavTapped(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        if (widget.currentRoute != AppRoutes.home) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
-        }
-        break;
-      case 1:
-        if (widget.currentRoute != AppRoutes.reportIssue) {
-          Navigator.pushReplacementNamed(context, AppRoutes.reportIssue);
-        }
-        break;
-      case 2:
-        if (widget.currentRoute != AppRoutes.adminMap) {
-          Navigator.pushReplacementNamed(context, AppRoutes.adminMap);
-        }
-        break;
-      case 3:
-        if (widget.currentRoute != AppRoutes.adminTickets) {
-          Navigator.pushReplacementNamed(context, AppRoutes.adminTickets);
-        }
-        break;
-      case 4:
-        if (widget.currentRoute != AppRoutes.myReports) {
-          Navigator.pushReplacementNamed(context, AppRoutes.myReports);
-        }
-        break;
+  void _onNavTapped(BuildContext context, int index, bool isAdmin) {
+    if (isAdmin) {
+      switch (index) {
+        case 0:
+          if (widget.currentRoute != AppRoutes.adminTickets) {
+            Navigator.pushReplacementNamed(context, AppRoutes.adminTickets);
+          }
+          break;
+        case 1:
+          if (widget.currentRoute != AppRoutes.adminMap) {
+            Navigator.pushReplacementNamed(context, AppRoutes.adminMap);
+          }
+          break;
+        case 2:
+          if (widget.currentRoute != AppRoutes.campus3DTwin) {
+            Navigator.pushReplacementNamed(context, AppRoutes.campus3DTwin);
+          }
+          break;
+        case 3:
+          if (widget.currentRoute != AppRoutes.analytics) {
+            Navigator.pushReplacementNamed(context, AppRoutes.analytics);
+          }
+          break;
+      }
+    } else {
+      switch (index) {
+        case 0:
+          if (widget.currentRoute != AppRoutes.home) {
+            Navigator.pushReplacementNamed(context, AppRoutes.home);
+          }
+          break;
+        case 1:
+          if (widget.currentRoute != AppRoutes.reportIssue) {
+            Navigator.pushReplacementNamed(context, AppRoutes.reportIssue);
+          }
+          break;
+        case 2:
+          if (widget.currentRoute != AppRoutes.myReports) {
+            Navigator.pushReplacementNamed(context, AppRoutes.myReports);
+          }
+          break;
+        case 3:
+          if (widget.currentRoute != AppRoutes.campus3DTwin) {
+            Navigator.pushReplacementNamed(context, AppRoutes.campus3DTwin);
+          }
+          break;
+      }
     }
   }
 
-  int _getNavIndex(String route) {
-    if (route == AppRoutes.home) return 0;
-    if (route == AppRoutes.reportIssue) return 1;
-    if (route == AppRoutes.adminMap) return 2;
-    if (route == AppRoutes.adminTickets) return 3;
-    if (route == AppRoutes.myReports) return 4;
-    return 0;
+  int _getNavIndex(String route, bool isAdmin) {
+    if (isAdmin) {
+      if (route == AppRoutes.adminTickets) return 0;
+      if (route == AppRoutes.adminMap) return 1;
+      if (route == AppRoutes.campus3DTwin) return 2;
+      if (route == AppRoutes.analytics) return 3;
+      return 0;
+    } else {
+      if (route == AppRoutes.home) return 0;
+      if (route == AppRoutes.reportIssue) return 1;
+      if (route == AppRoutes.myReports) return 2;
+      if (route == AppRoutes.campus3DTwin) return 3;
+      return 0;
+    }
   }
 
   Future<void> _handleLogout(BuildContext ctx) async {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../config/app_routes.dart';
 import '../../config/theme.dart';
 import '../../models/complaint_model.dart';
 import '../../services/api_client.dart';
@@ -180,6 +181,51 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
           children: [
             // Top Persistent Blended Header (Never jumps)
             const AppHeader(),
+
+            // Admin Quick Return Banner if an Admin is browsing Student View
+            if (_auth.isAdmin)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1E293B),
+                  border: Border(bottom: BorderSide(color: Color(0xFFF59E0B), width: 1.5)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.shield_rounded, size: 16, color: Color(0xFFF59E0B)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Administrator Session active (Viewing Citizen Portal)",
+                        style: GoogleFonts.comfortaa(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.adminTickets),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "Admin Command Center →",
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             // Main Body Area with Fixed Shell
             Expanded(

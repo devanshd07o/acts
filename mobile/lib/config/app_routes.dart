@@ -28,7 +28,7 @@ class AppRoutes {
   static String get initialRoute {
     final auth = AuthService();
     if (auth.isLoggedIn) {
-      return home;
+      return auth.isAdmin ? adminTickets : home;
     }
     return login;
   }

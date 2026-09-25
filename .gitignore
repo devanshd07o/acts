@@ -74,3 +74,6 @@ osm_*.json
 *.swo
 .DS_Store
 Thumbs.db
+*.exe
+*.dll
+data/

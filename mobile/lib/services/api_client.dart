@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import '../config/api_constants.dart';
@@ -68,9 +69,8 @@ class ApiClient {
                 return handler.resolve(cloneReq);
               }
             } catch (refreshErr) {
-              if (refreshErr is DioException && refreshErr.response?.statusCode == 401) {
-                await _auth.clearAuth();
-              }
+              debugPrint("Token refresh failed or offline mode: $refreshErr");
+              // Retain user session in persistent storage; do NOT wipe credentials
             }
           }
           return handler.next(error);

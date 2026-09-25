@@ -5,8 +5,15 @@ import { User, ShieldCheck, ArrowLeft, KeyRound, Mail, Sparkles, Building, Check
 import { fetchClient, API_BASE_URL } from '../api/client';
 
 const Login = () => {
-    const { login } = useRole();
+    const { role, login } = useRole();
     const navigate = useNavigate();
+
+    // Auto-redirect if already logged in (never ask to login repeatedly)
+    React.useEffect(() => {
+        if (role) {
+            navigate(role === 'admin' ? '/admin/dashboard' : '/report', { replace: true });
+        }
+    }, [role, navigate]);
 
     // Tabs: 'student' | 'admin' | 'register'
     const [tab, setTab] = useState('student');

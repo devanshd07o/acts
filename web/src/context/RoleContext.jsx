@@ -33,14 +33,9 @@ export const RoleProvider = ({ children }) => {
                 if (userRes.username) localStorage.setItem('acts_username', userRes.username);
                 if (userRes.full_name) localStorage.setItem('acts_name', userRes.full_name);
             } catch (err) {
-                // Only wipe session if server explicitly returned 401 Unauthorized
-                const errMsg = err?.message || '';
-                if (errMsg.includes('401')) {
-                    setRole(null);
-                    localStorage.removeItem('acts_token');
-                    localStorage.removeItem('acts_role');
-                } else if (savedRole) {
-                    // Fallback to cached role during network disruption
+                // Retain cached role and credentials so user is NEVER logged out on app restart or temporary network glitch
+                console.warn('Background profile sync notice (session maintained):', err);
+                if (savedRole) {
                     setRole(savedRole);
                 }
             } finally {

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import MobileLayout from './MobileLayout';
+import AdminLayout from './AdminLayout';
+import { useRole } from '../context/RoleContext';
 import { getMapMarkers, getAdminClusters } from '../api/admin';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { MapContainer, Marker, TileLayer, Popup, useMap } from 'react-leaflet';
@@ -47,6 +49,7 @@ const getDepartmentBadgeClass = (dept) => {
 };
 
 const MapView = () => {
+    const { role } = useRole();
     const [markers, setMarkers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -175,9 +178,8 @@ const MapView = () => {
     const centerLat = markers.length > 0 ? markers.reduce((sum, m) => sum + (parseFloat(m.latitude) || 28.5355), 0) / markers.length : 28.535516;
     const centerLng = markers.length > 0 ? markers.reduce((sum, m) => sum + (parseFloat(m.longitude) || 77.3910), 0) / markers.length : 77.391026;
 
-    return (
-        <MobileLayout title="Live Admin Command Map" headerClass="bg-acts-teal" showNav={true}>
-            <div className="h-full relative w-full overflow-hidden border-t-2 border-acts-teal">
+    const mapContent = (
+        <div className="h-full relative w-full overflow-hidden border-t-2 border-acts-teal">
 
                 {toastMessage && (
                     <div className="absolute top-[60px] left-[50%] -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded-lg shadow-2xl z-[2000] whitespace-nowrap text-[13px] font-bold tracking-wide animate-in fade-in">
@@ -348,6 +350,21 @@ const MapView = () => {
                     </div>
                 )}
             </div>
+    );
+
+    if (role === 'admin') {
+        return (
+            <AdminLayout pageTitle="Tactical GIS Campus Map">
+                <div className="h-[calc(100vh-64px)] relative w-full overflow-hidden bg-slate-900">
+                    {mapContent}
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    return (
+        <MobileLayout title="Campus Civic Map" headerClass="bg-[#1e293b]" showNav={true}>
+            {mapContent}
         </MobileLayout>
     );
 };

@@ -94,7 +94,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (_auth.isLoggedIn) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
+          Navigator.pushReplacementNamed(
+            context,
+            _auth.isAdmin ? AppRoutes.adminTickets : AppRoutes.home,
+          );
         }
       });
     }
@@ -194,7 +197,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         }
 
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        Navigator.pushReplacementNamed(
+          context,
+          isAdmin ? AppRoutes.adminTickets : AppRoutes.home,
+        );
         return;
       }
     } catch (e) {
@@ -227,7 +233,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       await _apiClient.login(usernameOrEmail, password);
       if (!mounted) return;
 
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      Navigator.pushReplacementNamed(
+        context,
+        _auth.isAdmin ? AppRoutes.adminTickets : AppRoutes.home,
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _errorMessage = e is ApiException ? e.message : "Authentication error: $e");
@@ -253,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         );
       }
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      Navigator.pushReplacementNamed(context, AppRoutes.adminTickets);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
