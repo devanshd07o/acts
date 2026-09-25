@@ -48,35 +48,73 @@ class HealthCheckView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+from .models import (
+    Complaint,
+    ComplaintCluster,
+    MaintenanceCrew,
+    Notification,
+    UserProfile,
+    DepartmentType,
+    ComplaintStatus
+)
+
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
+        profile = getattr(request.user, 'profile', None)
         full_name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
         email = request.user.email or (f"{request.user.username}@abesec.ac.in" if '@' not in request.user.username else request.user.username)
         return Response({
             "username": request.user.username,
             "full_name": full_name,
             "email": email,
-            "is_admin": request.user.is_staff
+            "is_admin": request.user.is_staff,
+            "role": profile.role if profile else ('admin' if request.user.is_staff else 'student'),
+            "roll_no": profile.roll_no if profile else '',
+            "employee_id": profile.employee_id if profile else '',
+            "department": profile.department if profile else 'General',
+            "designation": profile.designation if profile else '',
+            "is_verified": profile.is_verified if profile else True
         })
 
 
 class CitizenRegisterView(APIView):
     permission_classes = []
 
+    @transaction.atomic
     def post(self, request):
         username = request.data.get('username', '').strip()
         password = request.data.get('password', '').strip()
         email = request.data.get('email', '').strip()
         full_name = request.data.get('full_name', '').strip()
         role = request.data.get('role', 'student').strip().lower()
+        roll_no = request.data.get('roll_no', '').strip()
+        employee_id = request.data.get('employee_id', '').strip()
+        department = request.data.get('department', 'General').strip()
+        designation = request.data.get('designation', '').strip()
 
         if not username or not password:
-            return Response({"detail": "Username and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Institutional username and password are required."}, status=status.HTTP_400_BAD_REQUEST)
         if len(password) < 6:
             return Response({"detail": "Password must be at least 6 characters long."}, status=status.HTTP_400_BAD_REQUEST)
         if User.objects.filter(username=username).exists():
-            return Response({"detail": "An account with this Institutional ID / Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": f"An account with ID '{username}' already exists. Please sign in."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Institutional verification & anti-impersonation rules
+        if role == 'student':
+            if not roll_no:
+                roll_no = username if username.isalnum() and len(username) >= 5 else ''
+            if not roll_no:
+                return Response({"detail": "Valid Student University Roll Number is required for verification."}, status=status.HTTP_400_BAD_REQUEST)
+            if len(roll_no) < 5:
+                return Response({"detail": "University Roll Number must contain at least 5 alphanumeric characters."}, status=status.HTTP_400_BAD_REQUEST)
+        elif role in ['admin', 'faculty']:
+            if not employee_id:
+                employee_id = username if any(p in username.upper() for p in ['EMP', 'FAC', 'ADM', 'STAFF']) else ''
+            if not employee_id or len(employee_id) < 4:
+                return Response({
+                    "detail": "Authorized College Employee/Faculty ID code (e.g. EMP-2041, FAC-CS-101) is required for staff access."
+                }, status=status.HTTP_400_BAD_REQUEST)
 
         first_name = full_name.split(' ')[0] if full_name else ''
         last_name = ' '.join(full_name.split(' ')[1:]) if (full_name and len(full_name.split(' ')) > 1) else ''
@@ -88,16 +126,33 @@ class CitizenRegisterView(APIView):
             first_name=first_name,
             last_name=last_name
         )
-        is_admin = (role == 'admin' or 'admin' in username.lower() or 'admin' in email.lower())
+        is_admin = (role in ['admin', 'faculty'] or 'admin' in username.lower())
         user.is_staff = is_admin
         user.save()
 
+        # Create or update verified UserProfile
+        profile, _ = UserProfile.objects.update_or_create(
+            user=user,
+            defaults={
+                'role': role,
+                'roll_no': roll_no,
+                'employee_id': employee_id,
+                'department': department or ('Operations' if is_admin else 'Engineering'),
+                'designation': designation or ('Campus Administrator' if is_admin else 'Enrolled Student'),
+                'is_verified': True
+            }
+        )
+
         refresh = RefreshToken.for_user(user)
         return Response({
-            "detail": "Account registered successfully in campus database.",
+            "detail": "Verified institutional account registered successfully.",
             "username": user.username,
             "full_name": full_name or user.username,
             "email": user.email,
+            "role": profile.role,
+            "roll_no": profile.roll_no,
+            "employee_id": profile.employee_id,
+            "department": profile.department,
             "access": str(refresh.access_token),
             "refresh": str(refresh),
             "is_admin": user.is_staff
@@ -115,6 +170,9 @@ class GoogleOAuthBridgeView(APIView):
         email = request.data.get('email', '').strip().lower()
         full_name = request.data.get('full_name', '').strip()
         role = request.data.get('role', 'student').strip().lower()
+        roll_no = request.data.get('roll_no', '').strip()
+        employee_id = request.data.get('employee_id', '').strip()
+        department = request.data.get('department', '').strip()
 
         if not email:
             return Response({"detail": "Google email is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -133,18 +191,35 @@ class GoogleOAuthBridgeView(APIView):
             )
             user.set_unusable_password()
 
-        is_admin = (role == 'admin' or 'admin' in username.lower() or 'admin' in email.lower())
+        is_admin = (role == 'admin' or 'admin' in username.lower() or 'admin' in email.lower() or 'faculty' in email.lower())
         if is_admin and not user.is_staff:
             user.is_staff = True
             user.save()
 
+        # Update profile
+        UserProfile.objects.update_or_create(
+            user=user,
+            defaults={
+                'role': 'admin' if user.is_staff else 'student',
+                'roll_no': roll_no,
+                'employee_id': employee_id,
+                'department': department or 'Campus Community',
+                'is_verified': True
+            }
+        )
+
         refresh = RefreshToken.for_user(user)
         display_name = f"{user.first_name} {user.last_name}".strip() or user.username
+        profile = getattr(user, 'profile', None)
         return Response({
             "detail": "Google session verified and JWT issued.",
             "username": user.username,
             "full_name": display_name,
             "email": user.email,
+            "role": profile.role if profile else ('admin' if user.is_staff else 'student'),
+            "roll_no": profile.roll_no if profile else '',
+            "employee_id": profile.employee_id if profile else '',
+            "department": profile.department if profile else '',
             "access": str(refresh.access_token),
             "refresh": str(refresh),
             "is_admin": user.is_staff
@@ -287,13 +362,16 @@ class ComplaintListView(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:
-            queryset = Complaint.objects.filter(user=self.request.user).select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
-        else:
-            uid = self.request.query_params.get('user_identifier', 'all')
-            if uid == 'all' or not uid:
+            if self.request.user.is_staff:
                 queryset = Complaint.objects.all().select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
             else:
+                queryset = Complaint.objects.filter(user=self.request.user).select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
+        else:
+            uid = self.request.query_params.get('user_identifier')
+            if uid and uid != 'all':
                 queryset = Complaint.objects.filter(user_identifier=uid).select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
+            else:
+                queryset = Complaint.objects.none()
 
         status_param = self.request.query_params.get('status')
         zone_param = self.request.query_params.get('campus_zone')

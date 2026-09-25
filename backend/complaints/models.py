@@ -148,3 +148,23 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user_identifier}: {self.message[:20]}"
+
+class UserProfile(models.Model):
+    """Institutional verified profile for Student Roll Numbers and Faculty Codes."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
+    role = models.CharField(max_length=30, default='student')
+    roll_no = models.CharField(max_length=50, blank=True, default='', help_text="Official Student University Roll No")
+    employee_id = models.CharField(max_length=50, blank=True, default='', help_text="Official Teacher / Staff ID")
+    department = models.CharField(max_length=100, blank=True, default='General')
+    designation = models.CharField(max_length=100, blank=True, default='')
+    phone_number = models.CharField(max_length=20, blank=True, default='')
+    is_verified = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        code = self.roll_no if self.role == 'student' else self.employee_id
+        return f"[{self.role.upper()}] {self.user.username} ({code or 'N/A'}) - {self.department}"

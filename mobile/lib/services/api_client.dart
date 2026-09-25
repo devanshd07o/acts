@@ -165,6 +165,10 @@ class ApiClient {
     String email = '',
     String fullName = '',
     String role = 'student',
+    String rollNo = '',
+    String employeeId = '',
+    String department = 'General',
+    String designation = '',
   }) async {
     try {
       final res = await _dio.post(
@@ -175,6 +179,10 @@ class ApiClient {
           'email': email,
           'full_name': fullName,
           'role': role,
+          'roll_no': rollNo,
+          'employee_id': employeeId,
+          'department': department,
+          'designation': designation,
         },
       );
 

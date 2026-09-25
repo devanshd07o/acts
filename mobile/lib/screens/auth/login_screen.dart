@@ -32,6 +32,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final TextEditingController _regEmailController = TextEditingController();
   final TextEditingController _regPasswordController = TextEditingController();
   final TextEditingController _regConfirmPasswordController = TextEditingController();
+  final TextEditingController _regRollNoController = TextEditingController();
+  final TextEditingController _regEmployeeIdController = TextEditingController();
+  final TextEditingController _regDepartmentController = TextEditingController(text: 'Computer Science & Engineering');
 
   // Register Role
   String _registerRole = 'student'; // 'student' or 'admin'
@@ -150,6 +153,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     _regEmailController.dispose();
     _regPasswordController.dispose();
     _regConfirmPasswordController.dispose();
+    _regRollNoController.dispose();
+    _regEmployeeIdController.dispose();
+    _regDepartmentController.dispose();
     super.dispose();
   }
 
@@ -246,61 +252,32 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
   }
 
-  Future<void> _quickAdminLogin() async {
-    setState(() => _isLoading = true);
-    try {
-      try {
-        await _apiClient.login('admin', 'admin123');
-      } catch (_) {
-        await _auth.saveAuth(
-          accessToken: 'acts_admin_token_permanent',
-          refreshToken: 'acts_admin_refresh_permanent',
-          username: 'Institutional Admin',
-          fullName: 'Campus Operations Administrator',
-          email: 'admin.dispatch@abesec.ac.in',
-          isAdmin: true,
-        );
-      }
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.adminTickets);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _quickStudentLogin() async {
-    setState(() => _isLoading = true);
-    try {
-      try {
-        await _apiClient.login('student', 'student123');
-      } catch (_) {
-        await _auth.saveAuth(
-          accessToken: 'acts_student_token_permanent',
-          refreshToken: 'acts_student_refresh_permanent',
-          username: 'Devansh Dubey',
-          fullName: 'Devansh Dubey',
-          email: 'devansh.22b0101@abesec.ac.in',
-          isAdmin: false,
-        );
-      }
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  // --- REAL REGISTRATION HANDLER (CREATES USER IN DJANGO DB) ---
+  // --- REAL REGISTRATION HANDLER (CREATES VERIFIED USER IN CAMPUS DB) ---
   Future<void> _handleRegister() async {
     final fullName = _regFullNameController.text.trim();
     final username = _regUsernameController.text.trim();
     final email = _regEmailController.text.trim();
     final password = _regPasswordController.text;
     final confirmPassword = _regConfirmPasswordController.text;
+    final rollNo = _regRollNoController.text.trim();
+    final employeeId = _regEmployeeIdController.text.trim();
+    final department = _regDepartmentController.text.trim();
 
     if (fullName.isEmpty || username.isEmpty || email.isEmpty || password.isEmpty) {
       setState(() => _errorMessage = "All registration fields are required.");
       return;
+    }
+
+    if (_registerRole == 'student') {
+      if (rollNo.isEmpty || rollNo.length < 5) {
+        setState(() => _errorMessage = "Valid Student University Roll Number is required (min 5 characters).");
+        return;
+      }
+    } else {
+      if (employeeId.isEmpty || employeeId.length < 4) {
+        setState(() => _errorMessage = "Authorized Faculty/Employee ID code (e.g. EMP-2041, FAC-CS-101) is required.");
+        return;
+      }
     }
 
     if (password.length < 6) {
@@ -326,19 +303,24 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         email: email,
         fullName: fullName,
         role: _registerRole,
+        rollNo: rollNo,
+        employeeId: employeeId,
+        department: department,
       );
 
       if (!mounted) return;
 
       setState(() {
-        _successMessage = "Account created successfully in campus database!";
+        _successMessage = "Account verified and registered successfully in campus database!";
       });
 
-      // Small delay for user feedback, then transition to portal
       await Future.delayed(const Duration(milliseconds: 650));
       if (!mounted) return;
 
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      Navigator.pushReplacementNamed(
+        context,
+        _registerRole == 'admin' ? AppRoutes.adminTickets : AppRoutes.home,
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _errorMessage = e is ApiException ? e.message : "Registration failed: $e");
@@ -1051,42 +1033,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 ),
               ),
       ),
-      const SizedBox(height: 12),
-      Row(
-        children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.school_rounded, size: 15, color: Color(0xFF2563EB)),
-              label: Text(
-                "Quick Student",
-                style: GoogleFonts.comfortaa(fontSize: 11, fontWeight: FontWeight.w700),
-              ),
-              onPressed: _isLoading ? null : _quickStudentLogin,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.admin_panel_settings_rounded, size: 15, color: Color(0xFFF97316)),
-              label: Text(
-                "Quick Admin",
-                style: GoogleFonts.comfortaa(fontSize: 11, fontWeight: FontWeight.w700),
-              ),
-              onPressed: _isLoading ? null : _quickAdminLogin,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-          ),
-        ],
-      ),
     ];
   }
 
@@ -1201,6 +1147,61 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         decoration: _buildInputDecoration(
           hint: "e.g. Devanshu Sharma",
           icon: Icons.person_outline_rounded,
+          isDark: isDark,
+        ),
+      ),
+
+      const SizedBox(height: 10),
+
+      // Student Roll Number OR Faculty Employee ID
+      if (_registerRole == 'student') ...[
+        _buildInputLabel("Student University Roll Number", isDark),
+        const SizedBox(height: 5),
+        TextField(
+          controller: _regRollNoController,
+          keyboardType: TextInputType.text,
+          style: GoogleFonts.comfortaa(
+            fontSize: 12.5,
+            color: isDark ? Colors.white : AppTheme.textDisplayLight,
+          ),
+          decoration: _buildInputDecoration(
+            hint: "e.g. 2100320100045",
+            icon: Icons.pin_outlined,
+            isDark: isDark,
+          ),
+        ),
+      ] else ...[
+        _buildInputLabel("Faculty / Employee ID Code", isDark),
+        const SizedBox(height: 5),
+        TextField(
+          controller: _regEmployeeIdController,
+          keyboardType: TextInputType.text,
+          style: GoogleFonts.comfortaa(
+            fontSize: 12.5,
+            color: isDark ? Colors.white : AppTheme.textDisplayLight,
+          ),
+          decoration: _buildInputDecoration(
+            hint: "e.g. EMP-2041 or FAC-CS-101",
+            icon: Icons.badge_rounded,
+            isDark: isDark,
+          ),
+        ),
+      ],
+
+      const SizedBox(height: 10),
+
+      // Department / Branch
+      _buildInputLabel("Campus Department / Branch", isDark),
+      const SizedBox(height: 5),
+      TextField(
+        controller: _regDepartmentController,
+        style: GoogleFonts.comfortaa(
+          fontSize: 12.5,
+          color: isDark ? Colors.white : AppTheme.textDisplayLight,
+        ),
+        decoration: _buildInputDecoration(
+          hint: "e.g. Computer Science & Engineering",
+          icon: Icons.account_balance_outlined,
           isDark: isDark,
         ),
       ),
