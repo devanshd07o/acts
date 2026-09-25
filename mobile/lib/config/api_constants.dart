@@ -22,6 +22,7 @@ class ApiConstants {
   static const String tokenRefresh = '/api/token/refresh/';
   static const String currentUser = '/api/me/';
   static const String citizenRegister = '/api/auth/register/';
+  static const String googleAuthBridge = '/api/auth/google/';
 
   // Citizen Endpoints
   static const String reportComplaint = '/api/complaints/report/';

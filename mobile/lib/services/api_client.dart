@@ -67,8 +67,10 @@ class ApiClient {
                 final cloneReq = await _dio.fetch(error.requestOptions);
                 return handler.resolve(cloneReq);
               }
-            } catch (_) {
-              await _auth.clearAuth();
+            } catch (refreshErr) {
+              if (refreshErr is DioException && refreshErr.response?.statusCode == 401) {
+                await _auth.clearAuth();
+              }
             }
           }
           return handler.next(error);
@@ -186,6 +188,46 @@ class ApiClient {
           accessToken: access,
           refreshToken: refresh,
           username: registeredUser,
+          isAdmin: isAdmin,
+        );
+      }
+
+      return res.data;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> loginWithGoogle({
+    required String email,
+    required String fullName,
+    String? photoUrl,
+    String role = 'student',
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiConstants.googleAuthBridge,
+        data: {
+          'email': email,
+          'full_name': fullName,
+          'role': role,
+        },
+      );
+
+      final access = res.data['access'];
+      final refresh = res.data['refresh'];
+      final isAdmin = res.data['is_admin'] == true;
+      final username = res.data['username'] ?? email.split('@')[0];
+      final resolvedName = res.data['full_name'] ?? fullName;
+
+      if (access != null && refresh != null) {
+        await _auth.saveAuth(
+          accessToken: access,
+          refreshToken: refresh,
+          username: username,
+          fullName: resolvedName,
+          email: email,
+          photoUrl: photoUrl,
           isAdmin: isAdmin,
         );
       }

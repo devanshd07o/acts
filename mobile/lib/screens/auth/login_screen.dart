@@ -171,17 +171,27 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             googleUser.email.contains('admin') ||
             googleUser.email.contains('dispatch');
 
-        await _auth.saveAuth(
-          accessToken: googleUser.accessToken.isNotEmpty
-              ? googleUser.accessToken
-              : 'google_session_${DateTime.now().millisecondsSinceEpoch}',
-          refreshToken: 'google_refresh_token',
-          username: googleUser.name,
-          fullName: googleUser.name,
-          email: googleUser.email,
-          photoUrl: googleUser.picture,
-          isAdmin: isAdmin,
-        );
+        try {
+          await _apiClient.loginWithGoogle(
+            email: googleUser.email,
+            fullName: googleUser.name,
+            photoUrl: googleUser.picture,
+            role: isAdmin ? 'admin' : 'student',
+          );
+        } catch (_) {
+          // Fallback offline session if backend unreachable
+          await _auth.saveAuth(
+            accessToken: googleUser.accessToken.isNotEmpty
+                ? googleUser.accessToken
+                : 'google_session_${DateTime.now().millisecondsSinceEpoch}',
+            refreshToken: 'google_refresh_token',
+            username: googleUser.name,
+            fullName: googleUser.name,
+            email: googleUser.email,
+            photoUrl: googleUser.picture,
+            isAdmin: isAdmin,
+          );
+        }
 
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, AppRoutes.home);

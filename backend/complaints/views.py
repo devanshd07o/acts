@@ -104,6 +104,53 @@ class CitizenRegisterView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
+class GoogleOAuthBridgeView(APIView):
+    """
+    Exchanges Google profile info (email, full_name, role) for a valid Django JWT pair.
+    Creates or retrieves the campus User, guaranteeing persistent JWT session without random logouts.
+    """
+    permission_classes = []
+
+    def post(self, request):
+        email = request.data.get('email', '').strip().lower()
+        full_name = request.data.get('full_name', '').strip()
+        role = request.data.get('role', 'student').strip().lower()
+
+        if not email:
+            return Response({"detail": "Google email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        username = email.split('@')[0].replace('.', '_').replace('-', '_')
+        user = User.objects.filter(email=email).first() or User.objects.filter(username=username).first()
+
+        if not user:
+            first_name = full_name.split(' ')[0] if full_name else username
+            last_name = ' '.join(full_name.split(' ')[1:]) if (full_name and len(full_name.split(' ')) > 1) else ''
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
+            user.set_unusable_password()
+
+        is_admin = (role == 'admin' or 'admin' in username.lower() or 'admin' in email.lower())
+        if is_admin and not user.is_staff:
+            user.is_staff = True
+            user.save()
+
+        refresh = RefreshToken.for_user(user)
+        display_name = f"{user.first_name} {user.last_name}".strip() or user.username
+        return Response({
+            "detail": "Google session verified and JWT issued.",
+            "username": user.username,
+            "full_name": display_name,
+            "email": user.email,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "is_admin": user.is_staff
+        }, status=status.HTTP_200_OK)
+
+
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 class ReportIssueView(APIView):

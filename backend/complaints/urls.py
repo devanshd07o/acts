@@ -3,6 +3,7 @@ from .views import (
     HealthCheckView,
     CurrentUserView,
     CitizenRegisterView,
+    GoogleOAuthBridgeView,
     ReportIssueView,
     ComplaintCreateView,
     ComplaintListView,
@@ -24,6 +25,7 @@ urlpatterns = [
     path('health/', HealthCheckView.as_view(), name='health-check'),
     path('me/', CurrentUserView.as_view(), name='current-user'),
     path('auth/register/', CitizenRegisterView.as_view(), name='citizen-register'),
+    path('auth/google/', GoogleOAuthBridgeView.as_view(), name='google-auth-bridge'),
 
     # Citizen Reporting & Lifecycle
     path('complaints/report/', ReportIssueView.as_view(), name='complaint-report'),
