@@ -112,30 +112,36 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 border-b border-black/5 sticky top-0 glass z-10" style={{ borderRadius: '20px 0 0 0' }}>
+        <div className="p-4 border-b border-slate-200/60 sticky top-0 glass z-10" style={{ borderRadius: '20px 0 0 0' }}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 <span
-                  className="inline-block w-3 h-3 rounded-full flex-shrink-0"
+                  className="inline-block w-3 h-3 rounded-full flex-shrink-0 shadow-2xs"
                   style={{ background: block.accentColor }}
                 />
-                <span className="font-mono text-xs text-slate-400 font-bold">{block.code}</span>
-                {cluster && (
+                <span className="font-mono text-xs text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 font-extrabold">{block.code}</span>
+                {cluster && cluster.totalQueries > 0 ? (
                   <span
-                    className="text-xs font-bold px-2 py-0.5 rounded-full text-white shadow-sm"
+                    className="text-xs font-extrabold px-2.5 py-0.5 rounded-full text-white shadow-2xs flex items-center gap-1.5"
                     style={{ background: cluster.heat.color }}
                   >
-                    {cluster.totalQueries} active issues
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    {cluster.totalQueries} Active Issue{cluster.totalQueries > 1 ? 's' : ''}
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full text-emerald-700 bg-emerald-50 border border-emerald-200 flex items-center gap-1 shadow-2xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Zero Defects
                   </span>
                 )}
               </div>
-              <h2 className="text-lg font-bold text-slate-800 leading-tight">{block.name}</h2>
+              <h2 className="text-lg font-black text-slate-900 leading-tight tracking-tight">{block.name}</h2>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[11px] font-semibold text-slate-600 capitalize px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-600 capitalize px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
                   {block.category || 'Zone'} • {block.floors} {block.floors > 1 ? 'Floors' : 'Level'}
                 </span>
-                <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                <span className="text-[10px] font-extrabold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Live Sync
                 </span>
@@ -143,25 +149,24 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 flex-shrink-0 mt-0.5 cursor-pointer"
+              className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100/90 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex-shrink-0 mt-0.5 transition-colors cursor-pointer border border-slate-200/60 shadow-2xs"
             >
-              <Icon d={ICONS.x} size={14} cls="text-slate-600" />
+              <Icon d={ICONS.x} size={14} cls="text-slate-600 stroke-[2.5]" />
             </button>
           </div>
         </div>
 
         {/* Floor selector */}
-        <div className="p-4 border-b border-black/5 bg-slate-50/50">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Floor Directory</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="p-3.5 border-b border-slate-200/60 bg-slate-50/70">
+          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Floor Directory</p>
+          <div className="bg-slate-200/50 p-1 rounded-xl flex flex-wrap gap-1.5 border border-slate-200/60">
             <button
               onClick={() => setActiveFloor(null)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 activeFloor === null
-                  ? 'text-white shadow-sm'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
               }`}
-              style={activeFloor === null ? { background: block.accentColor } : {}}
             >All Floors</button>
             {block.floors_data.map(f => {
               const fCount = queries.filter(q => q.blockId === blockId && q.floor === f.f).length;
@@ -169,17 +174,16 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
                 <button
                   key={f.f}
                   onClick={() => setActiveFloor(activeFloor === f.f ? null : f.f)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                     activeFloor === f.f
-                      ? 'text-white shadow-sm'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                   }`}
-                  style={activeFloor === f.f ? { background: block.accentColor } : {}}
                 >
                   Floor {f.f}
                   {fCount > 0 && (
-                    <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                      activeFloor === f.f ? 'bg-white/30 text-white' : 'bg-red-100 text-red-600'
+                    <span className={`w-4 h-4 rounded-full text-[10px] font-extrabold flex items-center justify-center ${
+                      activeFloor === f.f ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'
                     }`}>{fCount}</span>
                   )}
                 </button>
@@ -189,9 +193,9 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
 
           {/* Floor rooms */}
           {activeFloor !== null && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
               {block.floors_data.find(f => f.f === activeFloor)?.rooms.map(room => (
-                <span key={room} className="px-2 py-0.5 bg-white border border-slate-200 text-slate-600 text-xs rounded-full shadow-2xs">
+                <span key={room} className="px-2.5 py-0.5 bg-white border border-slate-200 text-slate-700 text-[11px] font-semibold rounded-md shadow-2xs">
                   {room}
                 </span>
               ))}
@@ -202,12 +206,21 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
         {/* Issue list */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {blockQueries.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="text-4xl mb-2">✅</div>
-              <p className="text-slate-700 font-bold text-sm">No Active Defects in this Zone</p>
-              <p className="text-slate-400 text-xs mt-1">
-                All infrastructure operational for {activeFloor !== null ? `Floor ${activeFloor}` : block.name}.
+            <div className="flex flex-col items-center justify-center text-center py-12 px-4 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200/90 my-2">
+              <div className="w-13 h-13 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200/80 flex items-center justify-center text-2xl mb-3 shadow-xs">
+                ✓
+              </div>
+              <p className="text-slate-900 font-extrabold text-[15px] tracking-tight">All Facilities Operational</p>
+              <p className="text-slate-500 text-xs font-medium mt-1 max-w-[280px] leading-relaxed">
+                Zero open defects logged in {activeFloor !== null ? `Floor ${activeFloor}` : block.name}. Telemetry active.
               </p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="mt-4 px-4 py-2 rounded-xl text-xs font-bold text-sky-700 bg-white border border-sky-200 hover:bg-sky-50 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Icon d={ICONS.plus} size={13} />
+                <span>Log New Observation</span>
+              </button>
             </div>
           ) : (
             blockQueries.map(q => {
@@ -215,67 +228,71 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
               const sv = SEVERITY_COLORS[q.severity] || SEVERITY_COLORS['Medium'];
               const statusCfg = STATUS_STYLES[q.status] || STATUS_STYLES['QUEUED'];
               return (
-                <div key={q.id} className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex-1 min-w-0 mr-2">
-                      <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                        <span className="font-mono text-[10px] font-bold text-slate-400">
+                <div key={q.id} className="rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-md p-4 shadow-xs hover:shadow-md transition-all duration-200">
+                  <div className="flex items-start justify-between gap-3 mb-2.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                        <span className="font-mono text-[11px] font-black tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">
                           {q.ticketId || `#${q.id.slice(0, 8).toUpperCase()}`}
                         </span>
-                        <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${sv.badge}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${sv.dot}`} />
+                        <span className={`inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full ${sv.badge}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${sv.dot} animate-pulse`} />
                           {q.severity} Severity
                         </span>
-                        <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border ${statusCfg.badge}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${statusCfg.badge}`}>
                           {statusCfg.label}
                         </span>
                       </div>
-                      <p className="text-sm font-bold text-slate-800 leading-snug">{q.title}</p>
+                      <h4 className="text-[14.5px] font-extrabold text-slate-900 leading-snug tracking-tight">
+                        {q.title}
+                      </h4>
                     </div>
-                    <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onUpvote?.(q.id);
-                        }}
-                        className="flex flex-col items-center text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded-xl p-2 transition-all border border-slate-200"
-                        title="Upvote (+1 crowd priority boost)"
-                      >
-                        <Icon d={ICONS.up} size={15} cls="text-sky-600" />
-                        <span className="text-xs font-black text-sky-700">{q.upvotes}</span>
-                      </button>
-                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUpvote?.(q.id);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-sky-200 bg-sky-50/90 hover:bg-sky-100 text-sky-700 font-extrabold text-xs shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
+                      title="1-Tap Crowd Upvote"
+                    >
+                      <Icon d={ICONS.up} size={14} cls="text-sky-600 stroke-[2.5]" />
+                      <span>{q.upvotes}</span>
+                    </button>
                   </div>
 
                   {q.description && (
-                    <p className="text-xs text-slate-600 mb-2.5 line-clamp-3 leading-relaxed">{q.description}</p>
+                    <p className="text-xs text-slate-600 mb-3 line-clamp-3 leading-relaxed bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/50 font-normal">
+                      {q.description}
+                    </p>
                   )}
 
-                  <div className="flex items-center justify-between flex-wrap gap-1.5 pt-1 border-t border-slate-100">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pt-2.5 border-t border-slate-100 text-xs">
                     <span
-                      className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                      className="text-[10.5px] font-extrabold tracking-wide uppercase px-2.5 py-0.5 rounded-md shadow-2xs"
                       style={{ background: cc.bg, color: cc.text }}
                     >
                       {q.category}
                     </span>
                     {q.assignedCrew ? (
-                      <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
-                        👷 {q.assignedCrew}
+                      <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-lg flex items-center gap-1">
+                        <span>👷</span>
+                        <span className="truncate max-w-[130px]">{q.assignedCrew}</span>
                       </span>
                     ) : (
-                      <span className="text-[10px] text-slate-400 font-medium">Pending Dispatch</span>
+                      <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200/60 font-semibold px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <span>⚡</span>
+                        <span>Triage Queue</span>
+                      </span>
                     )}
-                    <span className="text-xs text-slate-400 font-medium ml-auto">{q.timeAgo}</span>
+                    <span className="text-[11px] text-slate-400 font-medium ml-auto">{q.timeAgo}</span>
                   </div>
 
-                  <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-400">
-                    <span className="text-[10px] uppercase font-mono text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded">F{q.floor}</span>
+                  <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium pt-1">
+                    <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">Floor {q.floor}</span>
                     <span>•</span>
-                    <span className="truncate max-w-[150px] font-medium text-slate-600">{q.room}</span>
+                    <span className="truncate max-w-[140px] text-slate-700 font-semibold">{q.room}</span>
                     <span>•</span>
-                    <span className="truncate max-w-[120px]">{q.author}</span>
+                    <span className="truncate max-w-[110px] text-slate-400 font-normal">{q.author}</span>
                   </div>
                 </div>
               );
@@ -284,28 +301,28 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
         </div>
 
         {/* Add Issue CTA */}
-        <div className="p-4 border-t border-black/5 sticky bottom-0 glass">
+        <div className="p-4 border-t border-slate-200/60 sticky bottom-0 glass shadow-lg">
           {showForm ? (
             <form onSubmit={handleSubmit} className="space-y-3">
               <input
                 required maxLength={100}
-                placeholder="Issue title (e.g. Broken corridor light, pipe leak) *"
+                placeholder="Issue title (e.g. Broken laboratory light, pipe leakage) *"
                 value={form.title}
                 onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl text-sm border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-medium"
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 font-semibold shadow-xs"
               />
               <div className="flex gap-2">
                 <select
                   value={form.category}
                   onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-                  className="flex-1 px-3 py-2 rounded-xl text-xs border border-slate-200 bg-white focus:outline-none font-semibold"
+                  className="flex-1 px-3 py-2 rounded-xl text-xs border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold text-slate-700"
                 >
                   {CATEGORIES.slice(1).map(c => <option key={c} value={c}>{CATEGORY_LABELS[c] || c}</option>)}
                 </select>
                 <select
                   value={form.severity}
                   onChange={e => setForm(p => ({ ...p, severity: e.target.value }))}
-                  className="w-28 px-3 py-2 rounded-xl text-xs border border-slate-200 bg-white focus:outline-none font-semibold"
+                  className="w-28 px-3 py-2 rounded-xl text-xs border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold text-slate-700"
                 >
                   {['Low','Medium','High'].map(s => <option key={s} value={s}>{s} Severity</option>)}
                 </select>
@@ -315,22 +332,22 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
                 placeholder={`Room / Location (default: Floor ${activeFloor ?? 0})`}
                 value={form.room}
                 onChange={e => setForm(p => ({ ...p, room: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl text-xs border border-slate-200 bg-white focus:outline-none text-slate-700"
+                className="w-full px-3.5 py-2 rounded-xl text-xs border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 text-slate-700 font-medium"
               />
               <textarea
                 rows={2} maxLength={300}
                 placeholder="Describe observations, hazards, or repair requirements..."
                 value={form.description}
                 onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl text-sm border border-slate-200 bg-white focus:outline-none resize-none"
+                className="w-full px-3.5 py-2 rounded-xl text-xs border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none font-normal"
               />
               <div className="flex gap-2">
                 <button type="submit"
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-white shadow-md hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
                   style={{ background: block.accentColor }}
                 >Dispatch to Campus HQ</button>
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer">
                   Cancel
                 </button>
               </div>
@@ -338,10 +355,10 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
           ) : (
             <button
               onClick={() => setShowForm(true)}
-              className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 hover:opacity-90 shadow-sm transition-opacity"
+              className="w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider text-white flex items-center justify-center gap-2 hover:opacity-95 shadow-md active:scale-[0.98] transition-all cursor-pointer"
               style={{ background: block.accentColor }}
             >
-              <Icon d={ICONS.plus} size={16} />
+              <Icon d={ICONS.plus} size={15} />
               Log Defect in {block.name}
             </button>
           )}
@@ -372,21 +389,21 @@ function HeatLegend() {
 
 // ─── Stats Bar ────────────────────────────────────────────────────────────────
 function StatsBar({ queries, clusters }) {
-  const critical = clusters.filter(c => c.heat.tier === 'critical').length;
+  const critical = clusters.filter(c => c.heat?.tier === 'critical').length;
   return (
     <div className="flex items-center gap-2 sm:gap-3">
-      <div className="glass rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs font-semibold shadow-xs">
-        <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
-        <span className="text-slate-800 font-bold">{queries.length}</span>
-        <span className="text-slate-500 hidden sm:inline">Active Reports</span>
+      <div className="glass rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs font-bold shadow-2xs border border-white/80">
+        <span className={`w-2 h-2 rounded-full ${queries.length > 0 ? 'bg-sky-500 animate-pulse' : 'bg-emerald-500'}`} />
+        <span className="text-slate-900 font-extrabold">{queries.length}</span>
+        <span className="text-slate-500 font-semibold hidden sm:inline">Active Reports</span>
       </div>
-      <div className="glass rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs font-semibold shadow-xs">
-        <Icon d={ICONS.building} size={13} cls="text-indigo-600" />
-        <span className="text-slate-800 font-bold">{clusters.length}</span>
-        <span className="text-slate-500 hidden sm:inline">Impacted Blocks</span>
+      <div className="glass rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs font-bold shadow-2xs border border-white/80">
+        <Icon d={ICONS.building} size={13} cls="text-indigo-600 stroke-[2.2]" />
+        <span className="text-slate-900 font-extrabold">{clusters.length}</span>
+        <span className="text-slate-500 font-semibold hidden sm:inline">Impacted Blocks</span>
       </div>
       {critical > 0 && (
-        <div className="rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs font-bold bg-red-500 text-white animate-pulse shadow-xs">
+        <div className="rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs font-extrabold bg-rose-500 text-white animate-pulse shadow-sm">
           <Icon d={ICONS.warning} size={13} />
           {critical} Critical Alert{critical > 1 ? 's' : ''}
         </div>
@@ -427,7 +444,23 @@ export default function App() {
             return zone.includes(bName) || zone.includes(bShort) || zone.includes(bId) ||
                    addr.includes(bName) || addr.includes(bShort) || addr.includes(bId) ||
                    desc.includes(bName) || desc.includes(bShort) || desc.includes(bId);
-          }) || CAMPUS_BLOCKS[3]; // default bhabha
+          });
+
+          // Check if coordinates correspond to a building
+          let targetBlock = matchedBlock;
+          if (!targetBlock && item.latitude && item.longitude) {
+            let closest = null, minDist = Infinity;
+            CAMPUS_BLOCKS.forEach(b => {
+              const bLat = 28.6341 + (b.x || 0) * 0.00002;
+              const bLng = 77.4474 + (b.z || 0) * 0.00002;
+              const dist = Math.hypot(parseFloat(item.latitude) - bLat, parseFloat(item.longitude) - bLng);
+              if (dist < minDist) { minDist = dist; closest = b; }
+            });
+            if (minDist < 0.0018) targetBlock = closest;
+          }
+
+          // If no specific block match, do NOT falsely default to Bhabha block
+          if (!targetBlock) return null;
 
           const crowdCount = item.cluster_details?.crowd_report_count ||
                              item.crowd_report_count ||
@@ -437,31 +470,36 @@ export default function App() {
                                 item.assigned_crew_name ||
                                 item.cluster_details?.assigned_crew_details?.name || null;
 
+          const rawTitle = item.gemini_analysis?.title || item.citizen_description?.trim() || item.raw_text?.trim() || 'Reported Campus Issue';
+          const cleanTitle = rawTitle.length > 55 ? `${rawTitle.slice(0, 52)}...` : rawTitle;
+
           return {
             id: item.id,
             ticketId: item.cluster_details?.id
               ? `ACTS-${item.cluster_details.id.slice(0, 8).toUpperCase()}`
               : `ACTS-${item.id.slice(0, 8).toUpperCase()}`,
-            blockId: matchedBlock.id,
-            floor: 0,
-            room: item.address || `${matchedBlock.name} Corridor`,
-            title: item.gemini_analysis?.title || item.citizen_description?.slice(0, 48) || item.raw_text?.slice(0, 48) || 'Infrastructure Defect',
+            blockId: targetBlock.id,
+            floor: item.floor_number ?? 0,
+            room: item.address || `${targetBlock.name} Premises`,
+            title: cleanTitle,
             category: item.department || item.assigned_department || 'CIVIL',
             severity: item.severity_score >= 8 ? 'High' : (item.severity_score >= 5 ? 'Medium' : 'Low'),
             severityScore: item.severity_score || 5,
             description: item.citizen_description || item.raw_text || '',
-            author: item.user_identifier || 'Student Citizen',
+            author: item.user_identifier || 'Campus Citizen',
             timeAgo: formatTimeAgo(item.created_at),
             upvotes: crowdCount,
             status: item.status || 'QUEUED',
             assignedCrew: assignedSquad,
             clusterId: item.cluster || item.cluster_details?.id || null,
           };
-        });
+        }).filter(Boolean);
 
         setQueries(backendMapped);
-        setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      } else {
+        setQueries([]);
       }
+      setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     } catch (e) {
       console.warn('Backend sync fallback active:', e);
     } finally {
@@ -610,13 +648,23 @@ export default function App() {
 
       {/* ── FPS INSTRUCTIONS OVERLAY ── */}
       {cameraMode === 'firstperson' && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 w-max max-w-[92vw]">
-          <div className="glass rounded-xl px-4 py-2 text-xs text-slate-800 font-semibold shadow-lg border border-white/60 fade-in-up flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <span>🖱️ <strong>Click screen</strong> to lock mouse</span>
-            <span>🚶 <strong>WASD</strong> to walk</span>
-            <span>⚡ <strong>Shift + WASD</strong> to sprint</span>
-            <span>👀 <strong>Mouse</strong> to look</span>
-            <span>⎋ <strong>Esc</strong> to unlock cursor</span>
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 w-max max-w-[95vw]">
+          <div className="glass rounded-2xl px-4 py-2.5 text-xs text-slate-800 font-semibold shadow-xl border border-white/80 fade-in-up flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+            <span className="flex items-center gap-1.5 text-slate-700">
+              <kbd className="px-2 py-0.5 rounded-md bg-white border border-slate-300 font-mono text-[11px] font-extrabold shadow-2xs">Click</kbd> Lock Mouse
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-700">
+              <kbd className="px-2 py-0.5 rounded-md bg-white border border-slate-300 font-mono text-[11px] font-extrabold shadow-2xs">W A S D</kbd> Walk
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-700">
+              <kbd className="px-2 py-0.5 rounded-md bg-white border border-slate-300 font-mono text-[11px] font-extrabold shadow-2xs">Shift</kbd> Sprint
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-700">
+              <kbd className="px-2 py-0.5 rounded-md bg-white border border-slate-300 font-mono text-[11px] font-extrabold shadow-2xs">Esc</kbd> Unlock
+            </span>
+            <span className="text-[11px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200">
+              🛡️ Boundary & Building Collisions Active
+            </span>
           </div>
         </div>
       )}

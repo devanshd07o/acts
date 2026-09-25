@@ -970,6 +970,61 @@ function buildBoundaryWall() {
   return g;
 }
 
+// ─── First-Person Solid Obstacle Collision & Campus Boundaries ────────────────
+const CAMPUS_BOUNDS = { minX: -144, maxX: 144, minZ: -468, maxZ: 40 };
+const PLAYER_COLLISION_RADIUS = 2.4;
+
+const SOLID_OBSTACLES = [
+  // Front plaza amenities
+  { id: 'cafes_block', x: -70, z: 12, w: 36, d: 24 },
+  { id: 'nescafe_kiosk', x: 0, z: 12, w: 14, d: 14 },
+  { id: 'temple', x: 70, z: 12, w: 20, d: 20 },
+  // Front academic row
+  { id: 'bhabha', x: -70, z: -55, w: 54, d: 34 },
+  { id: 'stair_tower', x: 0, z: -55, w: 18, d: 18 },
+  { id: 'aryabhata', x: 70, z: -55, w: 54, d: 34 },
+  // Central academic row
+  { id: 'ramanujan', x: -70, z: -135, w: 52, d: 34 },
+  { id: 'kalpana', x: 0, z: -135, w: 56, d: 38 },
+  { id: 'business_school', x: 70, z: -135, w: 54, d: 38 },
+  // Sports ground pavilion & commentary tower
+  { id: 'cricket_pavilion', x: 0, z: -332, w: 42, d: 20 },
+  { id: 'commentary_tower', x: 70, z: -275, w: 14, d: 14 },
+  // Rear amenities & hostels
+  { id: 'swimming_pool_basin', x: -25, z: -375, w: 48, d: 28 },
+  { id: 'girls_hostel', x: -95, z: -390, w: 56, d: 42 },
+  { id: 'boys_hostel_1', x: 40, z: -405, w: 56, d: 40 },
+  { id: 'boys_hostel_2', x: 110, z: -405, w: 54, d: 40 },
+  { id: 'water_tank_pillar', x: 0, z: -440, w: 16, d: 16 },
+  // Main Entrance gate security towers
+  { id: 'gate_arch_left', x: -18, z: 38, w: 16, d: 8 },
+  { id: 'gate_arch_right', x: 18, z: 38, w: 16, d: 8 }
+];
+
+function isPlayerColliding(px, pz) {
+  // 1. Campus perimeter fence boundary
+  if (px <= CAMPUS_BOUNDS.minX || px >= CAMPUS_BOUNDS.maxX ||
+      pz <= CAMPUS_BOUNDS.minZ || pz >= CAMPUS_BOUNDS.maxZ) {
+    return true;
+  }
+
+  // 2. Solid building AABB collision with player buffer radius
+  for (let i = 0; i < SOLID_OBSTACLES.length; i++) {
+    const ob = SOLID_OBSTACLES[i];
+    const halfW = ob.w / 2 + PLAYER_COLLISION_RADIUS;
+    const halfD = ob.d / 2 + PLAYER_COLLISION_RADIUS;
+
+    if (
+      px >= (ob.x - halfW) && px <= (ob.x + halfW) &&
+      pz >= (ob.z - halfD) && pz <= (ob.z + halfD)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Campus3DScene({ clusters, onBuildingClick, cameraMode }) {
   const mountRef = useRef(null);
@@ -1339,16 +1394,37 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
       // Camera Modes
       if (mode === 'firstperson') {
         const isSprinting = inp.keys['ShiftLeft'] || inp.keys['ShiftRight'];
-        const sp = (isSprinting ? 2.5 : 1.1) * dt;
+        const sp = (isSprinting ? 2.4 : 1.1) * dt;
         const fwdX = -Math.sin(fps.yaw);
         const fwdZ = -Math.cos(fps.yaw);
         const rgtX = Math.cos(fps.yaw);
         const rgtZ = -Math.sin(fps.yaw);
 
-        if (inp.keys['KeyW'] || inp.keys['ArrowUp']) { fps.x += fwdX * sp; fps.z += fwdZ * sp; }
-        if (inp.keys['KeyS'] || inp.keys['ArrowDown']) { fps.x -= fwdX * sp; fps.z -= fwdZ * sp; }
-        if (inp.keys['KeyA'] || inp.keys['ArrowLeft']) { fps.x -= rgtX * sp; fps.z -= rgtZ * sp; }
-        if (inp.keys['KeyD'] || inp.keys['ArrowRight']) { fps.x += rgtX * sp; fps.z += rgtZ * sp; }
+        let moveX = 0;
+        let moveZ = 0;
+
+        if (inp.keys['KeyW'] || inp.keys['ArrowUp'])   { moveX += fwdX * sp; moveZ += fwdZ * sp; }
+        if (inp.keys['KeyS'] || inp.keys['ArrowDown']) { moveX -= fwdX * sp; moveZ -= fwdZ * sp; }
+        if (inp.keys['KeyA'] || inp.keys['ArrowLeft']) { moveX -= rgtX * sp; moveZ -= rgtZ * sp; }
+        if (inp.keys['KeyD'] || inp.keys['ArrowRight']){ moveX += rgtX * sp; moveZ += rgtZ * sp; }
+
+        // Axis-separated collision test to allow smooth wall sliding
+        if (moveX !== 0) {
+          const testX = fps.x + moveX;
+          if (!isPlayerColliding(testX, fps.z)) {
+            fps.x = testX;
+          }
+        }
+        if (moveZ !== 0) {
+          const testZ = fps.z + moveZ;
+          if (!isPlayerColliding(fps.x, testZ)) {
+            fps.z = testZ;
+          }
+        }
+
+        // Failsafe clamp inside campus bounds
+        fps.x = Math.max(CAMPUS_BOUNDS.minX + 1.0, Math.min(CAMPUS_BOUNDS.maxX - 1.0, fps.x));
+        fps.z = Math.max(CAMPUS_BOUNDS.minZ + 1.0, Math.min(CAMPUS_BOUNDS.maxZ - 1.0, fps.z));
 
         fps.y = 4.8; // Realistic eye level
         camera.position.set(fps.x, fps.y, fps.z);
