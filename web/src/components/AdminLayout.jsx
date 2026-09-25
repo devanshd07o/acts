@@ -11,13 +11,15 @@ import {
     X,
     Shield,
     ChevronRight,
+    Layers,
 } from 'lucide-react';
 import { useRole } from '../context/RoleContext';
 
 const NAV_ITEMS = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { label: 'Tickets', icon: Ticket, path: '/admin' },
-    { label: 'Map', icon: Map, path: '/map' },
+    { label: '2D Map', icon: Map, path: '/map' },
+    { label: '3D Campus Twin', icon: Layers, path: 'http://127.0.0.1:5173', external: true },
     { label: 'Crews', icon: Users, path: '/admin/dashboard', badge: null },
 ];
 
@@ -53,10 +55,17 @@ const AdminLayout = ({ children, pageTitle, actions }) => {
             {/* Nav */}
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest px-2 pb-2">Navigation</p>
-                {NAV_ITEMS.map(({ label, icon: Icon, path }) => (
+                {NAV_ITEMS.map(({ label, icon: Icon, path, external }) => (
                     <button
                         key={label}
-                        onClick={() => { navigate(path); setSidebarOpen(false); }}
+                        onClick={() => {
+                            if (external) {
+                                window.open(path, '_blank');
+                            } else {
+                                navigate(path);
+                            }
+                            setSidebarOpen(false);
+                        }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group ${
                             isActive(path)
                                 ? 'bg-blue-600 text-white shadow-md'
@@ -65,7 +74,11 @@ const AdminLayout = ({ children, pageTitle, actions }) => {
                     >
                         <Icon size={16} className={`shrink-0 ${isActive(path) ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
                         <span className="flex-1 text-left">{label}</span>
-                        {isActive(path) && <ChevronRight size={14} className="text-blue-200" />}
+                        {external ? (
+                            <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">Live 3D</span>
+                        ) : (
+                            isActive(path) && <ChevronRight size={14} className="text-blue-200" />
+                        )}
                     </button>
                 ))}
             </nav>

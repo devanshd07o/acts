@@ -205,17 +205,27 @@ const MapView = () => {
                     </div>
                 )}
 
-                {/* Severity Filters */}
-                <div className="absolute top-[12px] left-[12px] right-[12px] z-[1000] flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-                    {['All', 'Critical', 'High', 'Medium', 'Low'].map(filterName => (
-                        <button
-                            key={filterName}
-                            onClick={() => setActiveFilter(filterName)}
-                            className={`px-3 py-1.5 rounded-full text-[12px] border whitespace-nowrap transition-colors outline-none shrink-0 ${getFilterClass(filterName)}`}
-                        >
-                            {filterName}
-                        </button>
-                    ))}
+                {/* Severity Filters & 3D Switch */}
+                <div className="absolute top-[12px] left-[12px] right-[12px] z-[1000] flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+                    <div className="flex gap-2 shrink-0">
+                        {['All', 'Critical', 'High', 'Medium', 'Low'].map(filterName => (
+                            <button
+                                key={filterName}
+                                onClick={() => setActiveFilter(filterName)}
+                                className={`px-3 py-1.5 rounded-full text-[12px] border whitespace-nowrap transition-colors outline-none shrink-0 ${getFilterClass(filterName)}`}
+                            >
+                                {filterName}
+                            </button>
+                        ))}
+                    </div>
+                    <a
+                        href="http://127.0.0.1:5173"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3.5 py-1.5 rounded-full text-[12px] font-bold bg-slate-900/90 hover:bg-slate-900 text-sky-400 border border-sky-500/40 shadow-md backdrop-blur whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0"
+                    >
+                        <span>🌐 3D Twin</span>
+                    </a>
                 </div>
 
                 <MapContainer
