@@ -397,7 +397,7 @@ function StatsBar({ queries, clusters }) {
 
 // ─── Main App Root ────────────────────────────────────────────────────────────
 export default function App() {
-  const [queries, setQueries] = useState(INITIAL_QUERIES);
+  const [queries, setQueries] = useState([]);
   const [activeFilter, setActiveFilter] = useState('All');
   const [cameraMode, setCameraMode] = useState('orbit');
   const [selectedBlock, setSelectedBlock] = useState(null);
