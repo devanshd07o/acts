@@ -358,14 +358,59 @@ class ApiClient {
 
       FormData formData = FormData.fromMap(formMap);
 
-      final response = await _dio.post(
-        ApiConstants.reportComplaint,
-        data: formData,
-      );
-
-      return response.data;
+      try {
+        final response = await _dio.post(
+          ApiConstants.reportComplaint,
+          data: formData,
+        );
+        return response.data;
+      } on DioException catch (dioErr) {
+        // If 401 (invalid/expired JWT token), clear dead tokens and auto-retry as guest citizen
+        if (dioErr.response?.statusCode == 401) {
+          debugPrint("Stale token detected. Clearing bad session and auto-retrying complaint...");
+          await _auth.clearTokens();
+          final cleanDio = Dio(BaseOptions(
+            baseUrl: ApiConstants.baseUrl,
+            headers: {'Accept': 'application/json'},
+          ));
+          final retryFormMap = Map<String, dynamic>.from(formMap);
+          if (imageFile != null) {
+            String fileName = imageFile.name;
+            if (!fileName.contains('.')) fileName = '$fileName.jpg';
+            retryFormMap['image'] = MultipartFile.fromBytes(
+              await imageFile.readAsBytes(),
+              filename: fileName,
+            );
+          }
+          final retryFormData = FormData.fromMap(retryFormMap);
+          final retryResponse = await cleanDio.post(
+            ApiConstants.reportComplaint,
+            data: retryFormData,
+          );
+          return retryResponse.data;
+        }
+        rethrow;
+      }
     } on DioException catch (e) {
       throw _handleDioError(e);
+    }
+  }
+
+  /// Real Hardware Microphone Listener: Calls Django server endpoint to capture real microphone audio
+  Future<Map<String, dynamic>> listenToLiveMicrophone() async {
+    try {
+      final cleanDio = Dio(BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 15),
+      ));
+      final res = await cleanDio.post('${ApiConstants.baseUrl}/api/voice/listen/');
+      return res.data is Map<String, dynamic> ? res.data : {'success': false, 'error': 'Invalid response'};
+    } on DioException catch (e) {
+      return {
+        'success': false,
+        'error': e.response?.data?['error'] ?? 'Microphone speech recognition timed out or unavailable.'
+      };
     }
   }
 

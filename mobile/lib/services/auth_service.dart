@@ -142,6 +142,13 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> clearTokens() async {
+    await init();
+    await _prefs?.remove(_keyAccessToken);
+    await _prefs?.remove(_keyRefreshToken);
+    notifyListeners();
+  }
+
   Future<void> clearAuth() async {
     await init();
     await _prefs?.remove(_keyAccessToken);

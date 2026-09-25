@@ -8,6 +8,19 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+class SafeJWTAuthentication(JWTAuthentication):
+    """
+    Tolerant JWT authenticator that gracefully falls back to AnonymousUser
+    if a token is expired, corrupted, or invalid, preventing 401 token errors
+    from blocking defect submissions.
+    """
+    def authenticate(self, request):
+        try:
+            return super().authenticate(request)
+        except Exception:
+            return None
 
 from .models import (
     Complaint,
@@ -327,6 +340,7 @@ class ReportIssueView(APIView):
     - Merges report into crowd cluster and dispatches to nearest crew.
     """
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+    authentication_classes = [SafeJWTAuthentication]
     permission_classes = []
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
@@ -883,3 +897,86 @@ class NotificationListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Notification.objects.filter(user_identifier=self.request.user.username)
+
+
+class RealVoiceListenerView(APIView):
+    """
+    Real Hardware Microphone Speech-to-Text Endpoint.
+    Opens the server/system hardware microphone (e.g. Realtek Microphone Array)
+    and uses speech_recognition to transcribe spoken words in real time.
+    """
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        # 1. Audio file upload support (if client sends recorded WAV/MP3)
+        audio_file = request.FILES.get('audio')
+        if audio_file:
+            try:
+                import speech_recognition as sr
+                import tempfile
+                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+                    for chunk in audio_file.chunks():
+                        tmp.write(chunk)
+                    tmp_path = tmp.name
+
+                r = sr.Recognizer()
+                with sr.AudioFile(tmp_path) as source:
+                    audio_data = r.record(source)
+
+                text = ""
+                try:
+                    text = r.recognize_google(audio_data, language='en-IN')
+                except Exception:
+                    try:
+                        text = r.recognize_google(audio_data, language='hi-IN')
+                    except Exception:
+                        text = ""
+
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+
+                if text:
+                    return Response({"success": True, "text": text})
+            except Exception as e:
+                pass
+
+        # 2. Direct hardware microphone listening
+        try:
+            import speech_recognition as sr
+            r = sr.Recognizer()
+            r.energy_threshold = 280
+            r.dynamic_energy_threshold = True
+
+            with sr.Microphone() as source:
+                r.adjust_for_ambient_noise(source, duration=0.2)
+                audio = r.listen(source, timeout=5, phrase_time_limit=8)
+
+            text = ""
+            try:
+                text = r.recognize_google(audio, language='en-IN')
+            except Exception:
+                try:
+                    text = r.recognize_google(audio, language='hi-IN')
+                except Exception:
+                    text = ""
+
+            if text:
+                return Response({"success": True, "text": text})
+            else:
+                return Response({
+                    "success": False,
+                    "error": "No audible words detected. Please speak louder into your microphone."
+                }, status=status.HTTP_200_OK)
+
+        except sr.WaitTimeoutError:
+            return Response({
+                "success": False,
+                "error": "Microphone listening timed out (silence detected)."
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "success": False,
+                "error": f"Microphone error: {str(e)}"
+            }, status=status.HTTP_200_OK)
+

@@ -1578,6 +1578,10 @@ class _VoiceDictationModalState extends State<_VoiceDictationModal> {
   List<double> _waveBars = List.generate(24, (i) => 0.25);
   final Random _rng = Random();
 
+  final ApiClient _apiClient = ApiClient();
+  bool _isLiveRecordingMic = false;
+  String _micStatusMessage = "Listening on Hardware Microphone... Speak in Hindi or English";
+
   final List<Map<String, dynamic>> _voiceScenarios = [
     {
       "title": "Corridor Electrical Spark",
@@ -1642,6 +1646,44 @@ class _VoiceDictationModalState extends State<_VoiceDictationModal> {
         _secondsElapsed++;
       });
     });
+
+    // Automatically trigger real hardware microphone listening on modal open
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startHardwareMicListening();
+    });
+  }
+
+  Future<void> _startHardwareMicListening() async {
+    if (_isLiveRecordingMic) return;
+    setState(() {
+      _isLiveRecordingMic = true;
+      _micStatusMessage = "🔴 Hardware Mic Active: Listening to your voice now (Speak in Hindi or English)...";
+    });
+
+    try {
+      final res = await _apiClient.listenToLiveMicrophone();
+      if (!mounted) return;
+      if (res['success'] == true && res['text'] != null && res['text'].toString().trim().isNotEmpty) {
+        final spoken = res['text'].toString().trim();
+        setState(() {
+          _textCtrl.text = spoken;
+          _textCtrl.selection = TextSelection.fromPosition(TextPosition(offset: spoken.length));
+          _micStatusMessage = "✅ Voice recognized: \"$spoken\"";
+        });
+      } else {
+        setState(() {
+          _micStatusMessage = res['error'] ?? "No audible speech detected. Speak louder or pick any incident below.";
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _micStatusMessage = "Microphone listening complete. You can also pick an incident below.";
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isLiveRecordingMic = false);
+    }
   }
 
   @override
@@ -1840,14 +1882,78 @@ class _VoiceDictationModalState extends State<_VoiceDictationModal> {
                           ),
                         ),
                         const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _isLiveRecordingMic
+                                ? const Color(0xFFEF4444).withValues(alpha: 0.15)
+                                : const Color(0xFF2563EB).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _isLiveRecordingMic
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFF2563EB).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _isLiveRecordingMic ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _isLiveRecordingMic ? "RECORDING FROM HARDWARE MIC..." : "HARDWARE MIC STANDBY",
+                                style: GoogleFonts.comfortaa(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: _isLiveRecordingMic ? const Color(0xFFEF4444) : const Color(0xFF2563EB),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         Text(
-                          "🎙️ Listening actively... Speak in Hindi or English, or pick a scenario below",
+                          _micStatusMessage,
                           style: GoogleFonts.comfortaa(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                            color: _isLiveRecordingMic
+                                ? const Color(0xFFEF4444)
+                                : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
                           ),
                           textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 10),
+                        ElevatedButton.icon(
+                          onPressed: _isLiveRecordingMic ? null : _startHardwareMicListening,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEF4444),
+                            disabledBackgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.6),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: _isLiveRecordingMic
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.mic_rounded, color: Colors.white, size: 16),
+                          label: Text(
+                            _isLiveRecordingMic ? "Listening..." : "Tap to Speak (Real Hardware Mic)",
+                            style: GoogleFonts.comfortaa(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ],
                     ),
