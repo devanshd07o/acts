@@ -323,7 +323,34 @@ class ReportIssueView(APIView):
         complaint.department = assigned_dept
         complaint.initial_severity = severity_score
 
-        # 5. Trust Evaluation
+        # 5. Trust Evaluation + Gemini Gating
+        # If Gemini flags low confidence OR image is invalid → PENDING_VERIFICATION (manual review).
+        # If Gemini confirms issue (score >= 4 and valid image or no image) → normal QUEUED flow.
+        gemini_confident = (
+            complaint.is_valid_image  # image passes blur check
+            and severity_score >= 4   # meaningful severity
+            and urgency not in ['', 'UNKNOWN', 'LOW']  # Gemini saw something
+        ) if image_file else (severity_score >= 4)  # text-only: trust if severity reasonable
+
+        if not gemini_confident:
+            complaint.status = ComplaintStatus.PENDING_VERIFICATION
+            complaint.admin_notes = (
+                f"Auto-flagged for manual review: "
+                f"severity={severity_score}, urgency={urgency}, "
+                f"is_valid_image={complaint.is_valid_image}"
+            )
+            complaint.save()
+            response_serializer = ComplaintSerializer(complaint, context={'request': request})
+            return Response({
+                "message": "Complaint submitted. Pending manual verification before triage.",
+                "status": "PENDING_VERIFICATION",
+                "is_new_cluster": False,
+                "crowd_report_count": 1,
+                "computed_priority": float(severity_score),
+                "cluster_id": None,
+                "complaint": response_serializer.data,
+            }, status=status.HTTP_201_CREATED)
+
         initial_status = evaluate_submission_trust(complaint.user_trust_score)
         complaint.status = initial_status
         complaint.save()
@@ -348,6 +375,7 @@ class ReportIssueView(APIView):
             "complaint": response_serializer.data,
             "complaint_detail": detail_serializer.data
         }, status=status.HTTP_201_CREATED)
+
 
 
 class ComplaintCreateView(ReportIssueView):

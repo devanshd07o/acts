@@ -12,6 +12,7 @@ class DepartmentType(models.TextChoices):
 
 class ComplaintStatus(models.TextChoices):
     SUBMITTED = 'SUBMITTED', 'Submitted'
+    PENDING_VERIFICATION = 'PENDING_VERIFICATION', 'Pending Manual Verification'
     QUEUED = 'QUEUED', 'Queued in Triage'
     ASSIGNED = 'ASSIGNED', 'Assigned to Crew'
     IN_PROGRESS = 'IN_PROGRESS', 'In Progress'
