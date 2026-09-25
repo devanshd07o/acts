@@ -59,6 +59,7 @@ export const RoleProvider = ({ children }) => {
     const logout = () => {
         setRole(null);
         localStorage.removeItem('acts_token');
+        localStorage.removeItem('acts_refresh');
         localStorage.removeItem('acts_role');
         localStorage.removeItem('acts_name');
         localStorage.removeItem('acts_email');

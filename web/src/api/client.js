@@ -9,7 +9,31 @@ export const fetchClient = async (endpoint, options = {}) => {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, { ...options, headers });
+    let response = await fetch(url, { ...options, headers });
+
+    // Auto-refresh token on 401 if refresh token exists and not already retrying
+    if (response.status === 401 && !options._retry && !endpoint.includes('/token/')) {
+        const refreshToken = localStorage.getItem('acts_refresh');
+        if (refreshToken) {
+            try {
+                const refreshRes = await fetch(`${API_BASE_URL}/token/refresh/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refresh: refreshToken })
+                });
+                if (refreshRes.ok) {
+                    const data = await refreshRes.json();
+                    if (data.access) {
+                        localStorage.setItem('acts_token', data.access);
+                        headers['Authorization'] = `Bearer ${data.access}`;
+                        response = await fetch(url, { ...options, headers, _retry: true });
+                    }
+                }
+            } catch (refreshErr) {
+                console.warn('Auto token refresh encountered error:', refreshErr);
+            }
+        }
+    }
 
     if (!response.ok) {
         let errorMessage = 'Network error';

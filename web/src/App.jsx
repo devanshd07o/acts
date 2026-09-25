@@ -11,12 +11,14 @@ import Notifications from './components/Notifications';
 import { RoleProvider } from './context/RoleContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import HomePage from './components/HomePage';
+
 function App() {
   return (
     <RoleProvider>
       <div className="min-h-[100dvh] w-full bg-[#eceff1] flex flex-col">
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
 
           {/* Citizen Routes */}

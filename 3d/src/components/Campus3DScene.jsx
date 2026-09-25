@@ -1026,7 +1026,7 @@ function isPlayerColliding(px, pz) {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function Campus3DScene({ clusters, onBuildingClick, cameraMode }) {
+export default function Campus3DScene({ clusters, onBuildingClick, cameraMode, isLiteMode = false }) {
   const mountRef = useRef(null);
   const labelDomsRef = useRef({});
   const stateRef = useRef({
@@ -1051,6 +1051,16 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
   const cameraModeRef = useRef(cameraMode);
   useEffect(() => { cameraModeRef.current = cameraMode; }, [cameraMode]);
 
+  // Dynamically toggle performance optimizations without reloading scene
+  useEffect(() => {
+    const r = stateRef.current.renderer;
+    if (r) {
+      r.shadowMap.enabled = !isLiteMode;
+      r.setPixelRatio(isLiteMode ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.8));
+      r.toneMapping = isLiteMode ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+    }
+  }, [isLiteMode]);
+
   // Scene setup
   useEffect(() => {
     const container = mountRef.current;
@@ -1063,13 +1073,13 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
     const initH = getH();
 
     // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
+    const renderer = new THREE.WebGLRenderer({ antialias: !isLiteMode, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(isLiteMode ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.8));
     renderer.setSize(initW, initH);
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = !isLiteMode;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor(0xdbeafe);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMapping = isLiteMode ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.18;
     container.appendChild(renderer.domElement);
     st.renderer = renderer;

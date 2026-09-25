@@ -216,7 +216,11 @@ const TicketList = () => {
                                                 </td>
                                                 <td className="px-4 py-3 text-slate-600 text-xs hidden lg:table-cell truncate max-w-[120px]">{cluster.campus_zone || '—'}</td>
                                                 <td className="px-4 py-3 text-slate-600 text-xs hidden lg:table-cell truncate max-w-[120px]">{cluster.department || '—'}</td>
-                                                <td className="px-4 py-3 text-slate-600 text-xs font-semibold hidden xl:table-cell">{cluster.complaint_count || cluster.crowd_count || 0}</td>
+                                                <td className="px-4 py-3 text-slate-600 text-xs font-semibold hidden xl:table-cell">
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[11px]">
+                                                        👥 {cluster.crowd_report_count || cluster.report_count || cluster.complaint_count || 1}
+                                                    </span>
+                                                </td>
                                                 <td className="px-4 py-3">
                                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusCls}`}>
                                                         {statusDisplay}
@@ -261,6 +265,9 @@ const TicketList = () => {
                                             </p>
                                             <div className="flex items-center gap-2 mt-1.5">
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cls}`}>{label}</span>
+                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 flex items-center gap-0.5">
+                                                    👥 {cluster.crowd_report_count || cluster.report_count || 1}
+                                                </span>
                                                 <span className="text-[10px] text-slate-400">{timeAgo(cluster.created_at)}</span>
                                             </div>
                                         </div>

@@ -475,27 +475,31 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
     );
   }
 
-  // --- CAMPUS STATS TELEMETRY ROW (3 VERIFIED CARDS) ---
+  // --- CAMPUS STATS TELEMETRY ROW (3 DYNAMIC VERIFIED CARDS) ---
   Widget _buildCampusStatsRow(bool isDark, bool isDesktop) {
+    final activeCount = _liveComplaints.where((c) => c.status != 'CLOSED' && c.status != 'RESOLVED').length;
+    final resolvedCount = _liveComplaints.where((c) => c.status == 'CLOSED' || c.status == 'RESOLVED').length;
+    final healthRating = activeCount == 0 ? "100% Operational" : "${(100 - (activeCount * 5)).clamp(60, 100)}% Rating";
+
     final card1 = _buildStatCard(
-      "Mean Triage SLA",
-      "< 45 Mins",
-      "Automated Priority Dispatch",
+      "Active Incidents",
+      "$activeCount Pending",
+      activeCount == 0 ? "Zero Open Defects" : "Automated Priority Dispatch",
       const Color(0xFFF97316),
       isDark,
     );
     final card2 = _buildStatCard(
-      "On-Duty Rapid Units",
-      "4 Squads Active",
-      "Electrical • Hydro • Civil • Safety",
-      const Color(0xFF2563EB),
+      "Resolved Tickets",
+      "$resolvedCount Completed",
+      "Verified by Committee & Reporters",
+      const Color(0xFF10B981),
       isDark,
     );
     final card3 = _buildStatCard(
-      "Campus Digital Grid",
-      "100% Geo-Mapped",
+      "Campus Facility Health",
+      healthRating,
       "17-Acre ABES Infrastructure Monitored",
-      const Color(0xFF10B981),
+      const Color(0xFF2563EB),
       isDark,
     );
 

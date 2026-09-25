@@ -48,3 +48,11 @@ export const confirmComplaintResolution = (id, isConfirmed, feedback = '') => {
         body: JSON.stringify({ is_confirmed: isConfirmed, feedback })
     });
 };
+
+export const upvoteComplaint = (id) => {
+    return fetchClient(`/complaints/${id}/upvote/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
+

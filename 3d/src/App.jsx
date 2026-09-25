@@ -566,6 +566,18 @@ export default function App() {
     }
   }, [fetchLiveComplaints]);
 
+  const [isLiteMode, setIsLiteMode] = useState(() => {
+    try { return localStorage.getItem('acts_3d_lite_mode') === 'true'; } catch (_) { return false; }
+  });
+
+  const toggleLiteMode = useCallback(() => {
+    setIsLiteMode(prev => {
+      const next = !prev;
+      try { localStorage.setItem('acts_3d_lite_mode', String(next)); } catch (_) {}
+      return next;
+    });
+  }, []);
+
   const camButtons = [
     { id: 'orbit',       label: '360° Orbit', icon: ICONS.orbit },
     { id: 'firstperson', label: '1st Person',  icon: ICONS.walk  },
@@ -573,13 +585,14 @@ export default function App() {
   ];
 
   return (
-    <div className="relative w-full h-full overflow-hidden sky-day" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div className="relative w-full h-full overflow-hidden sky-day" style={{ fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif' }}>
 
       {/* 3D Campus Scene */}
       <Campus3DScene
         clusters={clusters}
         onBuildingClick={handleBuildingClick}
         cameraMode={cameraMode}
+        isLiteMode={isLiteMode}
       />
 
       {/* ── TOP NAVBAR ── */}
@@ -619,8 +632,20 @@ export default function App() {
             ))}
           </div>
 
-          {/* Real Live Sync Button + Report CTA */}
+          {/* Real Live Sync Button + Lite Mode Toggle + Report CTA */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggleLiteMode}
+              className={`nav-pill text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                isLiteMode
+                  ? 'bg-amber-500 text-white border-amber-600 shadow-amber-500/20'
+                  : 'bg-white/90 hover:bg-white text-slate-700 border-slate-200'
+              }`}
+              title={isLiteMode ? "Lite Mode Active (60 FPS, No Shadows). Click for Ultra HD." : "Ultra HD Active. Click for Lite Mode (smoother on older/low-spec laptops)."}
+            >
+              <span>{isLiteMode ? '⚡ Lite (60 FPS)' : '✨ Ultra 3D'}</span>
+            </button>
+
             <button
               onClick={fetchLiveComplaints}
               className={`nav-pill text-xs font-bold transition-all border flex items-center gap-1.5 ${
@@ -637,7 +662,7 @@ export default function App() {
 
             <button
               onClick={() => setSelectedBlock(CAMPUS_BLOCKS[3].id)}
-              className="nav-pill bg-sky-500 text-white font-bold text-xs hover:bg-sky-600 shadow-sm flex items-center gap-1"
+              className="nav-pill bg-sky-500 text-white font-bold text-xs hover:bg-sky-600 shadow-sm flex items-center gap-1 cursor-pointer"
             >
               <Icon d={ICONS.plus} size={13} />
               <span className="hidden sm:inline">Report Issue</span>
