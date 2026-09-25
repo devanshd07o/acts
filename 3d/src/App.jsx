@@ -131,16 +131,23 @@ function BuildingDrawer({ blockId, queries, clusters, onClose, onAddQuery, onUpv
                 )}
               </div>
               <h2 className="text-lg font-bold text-slate-800 leading-tight">{block.name}</h2>
-              <p className="text-xs text-slate-500 mt-0.5">{block.subtitle}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[11px] font-semibold text-slate-600 capitalize px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
+                  {block.category || 'Zone'} • {block.floors} {block.floors > 1 ? 'Floors' : 'Level'}
+                </span>
+                <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Sync
+                </span>
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 flex-shrink-0 mt-0.5"
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 flex-shrink-0 mt-0.5 cursor-pointer"
             >
               <Icon d={ICONS.x} size={14} cls="text-slate-600" />
             </button>
           </div>
-          <p className="text-xs text-slate-500 mt-2 leading-relaxed">{block.description}</p>
         </div>
 
         {/* Floor selector */}

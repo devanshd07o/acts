@@ -788,10 +788,12 @@ function buildSwimmingPool(x, z, w = 42, d = 24) {
   // Crystal Clear Pool Water
   const water = new THREE.Mesh(
     new THREE.PlaneGeometry(w - 3, d - 3),
-    new THREE.MeshLambertMaterial({
+    new THREE.MeshStandardMaterial({
       color: '#0284c7',
+      roughness: 0.08,
+      metalness: 0.35,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.88
     })
   );
   water.rotation.x = -Math.PI / 2;
@@ -1010,10 +1012,10 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
     renderer.setSize(initW, initH);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor(0xdbeafe);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.18;
     container.appendChild(renderer.domElement);
     st.renderer = renderer;
 
@@ -1023,7 +1025,7 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
 
     // Scene
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0xdbeafe, 0.00045);
+    scene.fog = new THREE.FogExp2(0xcfe2fe, 0.00038);
     st.scene = scene;
 
     // Sky Sphere
@@ -1032,22 +1034,27 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
     scene.add(new THREE.Mesh(skyGeo, skyMat));
 
     // Lighting
-    scene.add(new THREE.AmbientLight(0xe0f2fe, 0.85));
-    const sun = new THREE.DirectionalLight(0xfff7ed, 2.2);
+    scene.add(new THREE.AmbientLight(0xe0f2fe, 0.75));
+    const sun = new THREE.DirectionalLight(0xfffbeb, 2.1);
     sun.position.set(220, 420, 180);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.left = sun.shadow.camera.bottom = -500;
     sun.shadow.camera.right = sun.shadow.camera.top = 500;
     sun.shadow.camera.far = 1600;
-    sun.shadow.bias = -0.0008;
+    sun.shadow.bias = -0.0004;
     scene.add(sun);
     scene.add(new THREE.HemisphereLight(0xbfdbfe, 0xd1fae5, 0.45));
 
     // Base Green Campus Ground (Spans entire deep campus)
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: 0x4d7c0f,
+      roughness: 0.94,
+      metalness: 0.02
+    });
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(1000, 1200),
-      new THREE.MeshLambertMaterial({ color: 0x86efac })
+      new THREE.PlaneGeometry(1200, 1400),
+      groundMat
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, 0, -215);
@@ -1055,19 +1062,30 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
     scene.add(ground);
 
     // NH-09 Highway (outside south gate)
+    const nh09Mat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.82,
+      metalness: 0.08
+    });
     const nh09 = new THREE.Mesh(
-      new THREE.PlaneGeometry(1000, 45),
-      new THREE.MeshLambertMaterial({ color: 0x64748b })
+      new THREE.PlaneGeometry(1200, 48),
+      nh09Mat
     );
     nh09.rotation.x = -Math.PI / 2;
     nh09.position.set(0, 0.05, 65);
+    nh09.receiveShadow = true;
     scene.add(nh09);
 
     // Highway yellow dividers
-    for (let i = -450; i < 450; i += 32) {
+    const dividerMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      roughness: 0.45,
+      metalness: 0.05
+    });
+    for (let i = -550; i < 550; i += 32) {
       const line = new THREE.Mesh(
         new THREE.PlaneGeometry(16, 1.8),
-        new THREE.MeshLambertMaterial({ color: 0xfbbf24 })
+        dividerMat
       );
       line.rotation.x = -Math.PI / 2;
       line.position.set(i, 0.1, 65);
@@ -1075,7 +1093,11 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
     }
 
     // ── Campus Paved Avenues & Paths ──
-    const pathMat = new THREE.MeshLambertMaterial({ color: 0xe2e8f0 });
+    const pathMat = new THREE.MeshStandardMaterial({
+      color: 0xf1f5f9,
+      roughness: 0.68,
+      metalness: 0.06
+    });
     const addPath = (cx, cz, pw, pd) => {
       const p = new THREE.Mesh(new THREE.PlaneGeometry(pw, pd), pathMat);
       p.rotation.x = -Math.PI / 2;
