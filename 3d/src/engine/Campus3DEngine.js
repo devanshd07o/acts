@@ -207,7 +207,7 @@ export default function Campus3DScene({
   const buildingsRef = useRef([]);
   const beaconsRef   = useRef([]);
   const orbitRef    = useRef({ theta: Math.PI * 0.22, phi: 0.72, radius: 420, targetTheta: Math.PI * 0.22, targetPhi: 0.72, targetRadius: 420 });
-  const fpsRef      = useRef({ x: 40, z: 60, yaw: -Math.PI * 0.6, pitch: -0.12 });
+  const fpsRef      = useRef({ x: 40, z: 60, yaw: -Math.PI * 0.6, pitch: 0 });
   const labelCallbackRef = useRef(null);
 
   // ── Init Three.js scene ──────────────────────────────────────────────────────
@@ -334,17 +334,41 @@ export default function Campus3DScene({
     };
     window.addEventListener('resize', onResize);
 
-    // ── INPUT: Mouse orbit ──
+    // ── INPUT: orbit drag + FPS pointer-lock mouse look ──
     const inp = inputRef.current;
+
+    // cameraMode ref — avoids stale closure inside animate()
+    const cameraModeRef = { current: cameraMode };
+    // We store it on inp so animate() can read it
+    inp.cameraModeRef = cameraModeRef;
+
+    const MOUSE_SENSITIVITY = 0.0022;
 
     const onMouseDown = (e) => {
       if (e.button !== 0) return;
+      if (inp.cameraModeRef.current === 'firstperson') {
+        // Request pointer lock for FPS look
+        renderer.domElement.requestPointerLock();
+        return;
+      }
       inp.isDragging = true;
       inp.lastX = e.clientX;
       inp.lastY = e.clientY;
       inp.velX = 0; inp.velY = 0;
     };
+
     const onMouseMove = (e) => {
+      if (inp.cameraModeRef.current === 'firstperson' && inp.pointerLocked) {
+        // Raw mouse delta — no clientX/Y needed with pointer lock
+        const dx = e.movementX || 0;
+        const dy = e.movementY || 0;
+        const fps = fpsRef.current;
+        fps.yaw   -= dx * MOUSE_SENSITIVITY;
+        fps.pitch -= dy * MOUSE_SENSITIVITY;
+        // Pitch clamped so camera never flips
+        fps.pitch = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, fps.pitch));
+        return;
+      }
       if (!inp.isDragging) return;
       const dx = e.clientX - inp.lastX;
       const dy = e.clientY - inp.lastY;
@@ -358,15 +382,25 @@ export default function Campus3DScene({
     };
     const onMouseUp = () => { inp.isDragging = false; };
     const onWheel = (e) => {
+      if (inp.cameraModeRef.current === 'firstperson') return;
       const orb = orbitRef.current;
       orb.targetRadius = Math.max(60, Math.min(800, orb.targetRadius + e.deltaY * 0.4));
       e.preventDefault();
     };
 
+    // Pointer lock change/error
+    const onPointerLockChange = () => {
+      inp.pointerLocked = document.pointerLockElement === renderer.domElement;
+    };
+    const onPointerLockError = () => { inp.pointerLocked = false; };
+    document.addEventListener('pointerlockchange', onPointerLockChange);
+    document.addEventListener('pointerlockerror', onPointerLockError);
+
     // Click detection for building selection
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     const onCanvasClick = (e) => {
+      if (inp.cameraModeRef.current === 'firstperson') return; // no building pick in FPS
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
       mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
@@ -379,7 +413,6 @@ export default function Campus3DScene({
         while (obj && !obj.userData?.blockId) obj = obj.parent;
         if (obj?.userData?.blockId) {
           onBuildingClick?.(obj.userData.blockId);
-          // Animate camera toward selected building
           const block = CAMPUS_BLOCKS.find(b => b.id === obj.userData.blockId);
           if (block) {
             const dx = block.x - 0, dz = block.z - 0;
@@ -437,7 +470,13 @@ export default function Campus3DScene({
     renderer.domElement.addEventListener('touchend', onTouchEnd);
 
     // FPS keyboard
-    const onKeyDown = (e) => { inp.keys[e.code] = true; };
+    const onKeyDown = (e) => {
+      inp.keys[e.code] = true;
+      // Esc releases pointer lock
+      if (e.code === 'Escape' && inp.pointerLocked) {
+        document.exitPointerLock();
+      }
+    };
     const onKeyUp   = (e) => { inp.keys[e.code] = false; };
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -454,22 +493,52 @@ export default function Campus3DScene({
 
       const orb = orbitRef.current;
       const fps = fpsRef.current;
-      const mode = cameraMode;
+      const mode = inp.cameraModeRef ? inp.cameraModeRef.current : cameraMode;
 
       // ── Camera update ──
       if (mode === 'firstperson') {
-        // Keyboard movement
-        const sp = FPS_MOVE_SPEED * dt;
+        // ── Pointer-lock mouse look ─────────────────────────────────────
+        // Pitch clamped to ±60° so camera NEVER flips upside down
+        const PITCH_MIN = -Math.PI / 3;   // -60°
+        const PITCH_MAX =  Math.PI / 3;   //  60°
+
+        // ── Keyboard movement ──────────────────────────────────────────
+        const sp = (inp.keys['ShiftLeft'] || inp.keys['ShiftRight'] ? 1.8 : 1.0) * FPS_MOVE_SPEED * dt;
         const sinY = Math.sin(fps.yaw);
         const cosY = Math.cos(fps.yaw);
 
-        if (inp.keys['KeyW'] || inp.keys['ArrowUp'])    { fps.x += sinY * sp; fps.z += cosY * sp; }
-        if (inp.keys['KeyS'] || inp.keys['ArrowDown'])  { fps.x -= sinY * sp; fps.z -= cosY * sp; }
-        if (inp.keys['KeyA'] || inp.keys['ArrowLeft'])  { fps.x -= cosY * sp; fps.z += sinY * sp; }
-        if (inp.keys['KeyD'] || inp.keys['ArrowRight']) { fps.x += cosY * sp; fps.z -= sinY * sp; }
-        if (inp.keys['KeyQ']) fps.yaw -= 0.04 * dt;
-        if (inp.keys['KeyE']) fps.yaw += 0.04 * dt;
+        let nx = fps.x;
+        let nz = fps.z;
 
+        if (inp.keys['KeyW'] || inp.keys['ArrowUp'])    { nx += sinY * sp; nz += cosY * sp; }
+        if (inp.keys['KeyS'] || inp.keys['ArrowDown'])  { nx -= sinY * sp; nz -= cosY * sp; }
+        if (inp.keys['KeyA'] || inp.keys['ArrowLeft'])  { nx -= cosY * sp; nz += sinY * sp; }
+        if (inp.keys['KeyD'] || inp.keys['ArrowRight']) { nx += cosY * sp; nz -= sinY * sp; }
+
+        // ── Campus boundary clamp (stay on campus ground) ─────────────
+        const BOUND_X = 340, BOUND_Z = 300;
+        fps.x = Math.max(-BOUND_X, Math.min(BOUND_X, nx));
+        fps.z = Math.max(-BOUND_Z, Math.min(BOUND_Z, nz));
+
+        // ── Building collision (simple AABB cylinder test) ─────────────
+        const PLAYER_R = 10;
+        for (const bGroup of buildingsRef.current) {
+          const bd = bGroup.userData.blockData;
+          if (!bd) continue;
+          const bx = bd.x, bz = bd.z;
+          const hw = bd.w / 2 + PLAYER_R, hd = bd.d / 2 + PLAYER_R;
+          if (fps.x > bx - hw && fps.x < bx + hw &&
+              fps.z > bz - hd && fps.z < bz + hd) {
+            // push out on nearest axis
+            const ox = fps.x - bx, oz = fps.z - bz;
+            const px = hw - Math.abs(ox), pz = hd - Math.abs(oz);
+            if (px < pz) fps.x += Math.sign(ox) * px;
+            else         fps.z += Math.sign(oz) * pz;
+          }
+        }
+
+        // ── Apply camera ───────────────────────────────────────────────
+        fps.pitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, fps.pitch));
         cam.position.set(fps.x, 20, fps.z);
         cam.rotation.order = 'YXZ';
         cam.rotation.y = fps.yaw;
@@ -555,11 +624,25 @@ export default function Campus3DScene({
       renderer.domElement.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      document.removeEventListener('pointerlockchange', onPointerLockChange);
+      document.removeEventListener('pointerlockerror', onPointerLockError);
+      if (document.pointerLockElement === renderer.domElement) document.exitPointerLock();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Sync cameraMode prop → ref so animate() always reads current value ────────
+  useEffect(() => {
+    if (inputRef.current.cameraModeRef) {
+      inputRef.current.cameraModeRef.current = cameraMode;
+    }
+    // When leaving FPS mode, release pointer lock
+    if (cameraMode !== 'firstperson' && document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+  }, [cameraMode]);
 
   // ── Update beacons when clusters change ──────────────────────────────────────
   useEffect(() => {
