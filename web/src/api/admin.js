@@ -44,3 +44,11 @@ export const updateClusterPriority = (clusterId, data) => {
         body: JSON.stringify(payload)
     });
 };
+
+export const reassignCrew = (clusterId, crewId, adminNotes = '') => {
+    return fetchClient(`/admin/clusters/${clusterId}/override-priority/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assigned_crew: crewId, admin_notes: adminNotes })
+    });
+};

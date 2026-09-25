@@ -22,6 +22,9 @@ class ComplaintModel {
   final bool? isConfirmedByReporter;
   final String reporterFeedback;
   final String adminNotes;
+  final String facultySupervisor;
+  final String studentLead;
+  final String committeeNotes;
   final DateTime createdAt;
 
   ComplaintModel({
@@ -48,6 +51,9 @@ class ComplaintModel {
     this.isConfirmedByReporter,
     required this.reporterFeedback,
     required this.adminNotes,
+    this.facultySupervisor = '',
+    this.studentLead = '',
+    this.committeeNotes = '',
     required this.createdAt,
   });
 
@@ -79,6 +85,9 @@ class ComplaintModel {
       isConfirmedByReporter: json['is_confirmed_by_reporter'],
       reporterFeedback: json['reporter_feedback'] ?? '',
       adminNotes: json['admin_notes'] ?? '',
+      facultySupervisor: json['faculty_supervisor'] ?? clusterData['faculty_supervisor'] ?? '',
+      studentLead: json['student_lead'] ?? clusterData['student_lead'] ?? '',
+      committeeNotes: json['committee_notes'] ?? clusterData['committee_notes'] ?? '',
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
     );
   }

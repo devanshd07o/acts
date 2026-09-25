@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    color: #24292e;
+    max-width: 850px;
+    margin: 40px auto;
+    padding: 0 30px;
+  }
+  h1, h2, h3 { color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-top: 24px; }
+  pre {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  code { font-family: 'Consolas', 'Courier New', monospace; }
+  p code { background: #f1f5f9; color: #0f172a; padding: 2px 6px; border-radius: 4px; }
+  blockquote {
+    border-left: 4px solid #3b82f6;
+    margin: 0;
+    padding: 8px 16px;
+    background: #eff6ff;
+    color: #1e3a8a;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #f8fafc; }
+</style>
+</head>
+<body>
+<h1>🚀 ACTS Backend — Friend's Antigravity Kickoff &amp; Execution Guide</h1>
+<blockquote>
+<p><strong>Project</strong>: ACTS (Autonomous Civic Triage System) — ABESEC Ghaziabad<br />
+<strong>Role</strong>: Dedicated Backend Developer (Fresh Git Repository)<br />
+<strong>Target</strong>: 100% Working, Testable Django REST API with Realistic Campus Seed Data  </p>
+</blockquote>
+<hr />
+<h2>📌 PART 1: Friend ke liye 3 Simple Steps (Read this first)</h2>
+<ol>
+<li>Apne laptop me ek new folder banao (e.g. <code>acts_backend_clean</code>).</li>
+<li>Antigravity IDE ya CLI me wo folder open karo.</li>
+<li><strong>Neeche diya gaya "KICKOFF PROMPT FOR ANTIGRAVITY" pura copy karo aur apne Antigravity me paste karke Enter daba do.</strong></li>
+<li>Jab Antigravity complete kar le, tab <code>python seed_acts_data.py</code> run karo aur <code>git push</code> karke hume repo ka link de do.</li>
+</ol>
+<hr />
+<h2>🤖 PART 2: KICKOFF PROMPT FOR ANTIGRAVITY (Copy-Paste this into Friend's Antigravity)</h2>
+<pre><code class="language-text">You are an expert Backend Engineer building the complete Django REST API for &quot;ACTS — Autonomous Civic Triage System&quot; (an AI-powered civic complaint reporting and triage platform for ABESEC Ghaziabad campus).
+
+Target: Build a standalone, rock-solid, production-grade Django backend in this current directory with SQLite, Django REST Framework, and full CORS support for Flutter/Web clients.
+
+### Strict Technical Requirements:
+1. Environment &amp; Setup:
+   - Create and activate virtual environment or use existing Python 3.11+.
+   - Install: `django djangorestframework django-cors-headers pillow requests python-dotenv`.
+   - Project name: `acts_core`. App name: `triage_engine`.
+   - In `settings.py`:
+     - Allow all hosts: `ALLOWED_HOSTS = ['*']`
+     - Enable CORS: Add `corsheaders` to INSTALLED_APPS and `corsheaders.middleware.CorsMiddleware` at top of MIDDLEWARE.
+     - `CORS_ALLOW_ALL_ORIGINS = True`
+     - Media files setup: `MEDIA_URL = '/media/'`, `MEDIA_ROOT = BASE_DIR / 'media'`.
+
+2. Data Models (in `triage_engine/models.py`):
+   - `UserProfile`: OneToOne with User, roles: `CITIZEN`, `DISPATCHER`, `CREW`.
+   - `MaintenanceCrew`:
+     - `name` (CharField)
+     - `department` (CharField: 'PLUMBING', 'ELECTRICAL', 'CIVIL', 'SANITATION', 'SECURITY')
+     - `phone` (CharField)
+     - `is_available` (BooleanField, default True)
+     - `current_latitude` (FloatField, default 28.6340)
+     - `current_longitude` (FloatField, default 77.4470)
+   - `Complaint`:
+     - `ticket_id` (CharField, unique, e.g. &quot;ACTS-2026-001&quot;)
+     - `user_identifier` (CharField, e.g. username or device ID)
+     - `title` (CharField, max 200)
+     - `description` (TextField)
+     - `category` (CharField: 'PLUMBING', 'ELECTRICAL', 'CIVIL', 'SANITATION', 'SECURITY', 'OTHER')
+     - `image` (ImageField, upload_to='complaints/', null=True, blank=True)
+     - `latitude` (FloatField)
+     - `longitude` (FloatField)
+     - `location_name` (CharField, max 200, e.g. &quot;Bhabha Hostel Block C, 2nd Floor&quot;)
+     - `base_severity` (IntegerField, default 2, range 1-5)
+     - `calculated_priority` (FloatField, default 2.0)
+     - `status` (CharField: 'SUBMITTED', 'TRIAGED', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'VERIFIED', 'REOPENED')
+     - `parent_cluster` (ForeignKey to self, null=True, blank=True, related_name='sub_reports')
+     - `crowd_report_count` (IntegerField, default 1)
+     - `assigned_crew` (ForeignKey to MaintenanceCrew, null=True, blank=True)
+     - `ai_summary` (TextField, blank=True)
+     - `created_at` (DateTimeField, auto_now_add=True)
+     - `updated_at` (DateTimeField, auto_now=True)
+   - `ComplaintTimeline`:
+     - `complaint` (ForeignKey to Complaint)
+     - `status` (CharField)
+     - `message` (TextField)
+     - `timestamp` (DateTimeField, auto_now_add=True)
+
+3. Core Logic &amp; Algorithms:
+   a) **Geospatial Deduplication &amp; Crowd Weighting**:
+      - Calculate Haversine distance in meters between new report and existing open reports (`status != 'RESOLVED'` and `status != 'VERIFIED'`).
+      - If distance &lt;= 60 meters AND category matches:
+        - Attach new report to the existing parent report (`parent_cluster = parent`).
+        - Increment `parent.crowd_report_count += 1`.
+        - Recalculate priority: `priority = base_severity * (1 + 0.35 * log2(crowd_report_count))`.
+        - Update parent's calculated_priority.
+      - Else: New standalone cluster master ticket.
+   b) **Rule-based + AI Triage Fallback**:
+      - If Google Gemini API key is in env (`GEMINI_API_KEY`), call Gemini to summarize and score severity.
+      - Otherwise, use smart regex/keyword triage:
+        - &quot;spark&quot;, &quot;wire&quot;, &quot;shock&quot;, &quot;fire&quot;, &quot;smoke&quot; -&gt; ELECTRICAL, Severity 5
+        - &quot;burst&quot;, &quot;leak&quot;, &quot;flood&quot;, &quot;drain&quot; -&gt; PLUMBING, Severity 4
+        - &quot;crack&quot;, &quot;wall&quot;, &quot;plaster&quot;, &quot;road&quot;, &quot;pothole&quot; -&gt; CIVIL, Severity 3
+        - &quot;garbage&quot;, &quot;trash&quot;, &quot;smell&quot; -&gt; SANITATION, Severity 2
+   c) **Crew Dispatch Recommendation**:
+      - Find nearest available crew with matching department using distance formula.
+
+4. REST Endpoints (Django REST Framework):
+   - `POST /api/complaints/report/`: Accepts multipart form (description, photo, latitude, longitude, location_name, user_identifier). Runs triage, cluster check, returns JSON.
+   - `GET /api/complaints/`: Lists all tickets. Supports query params: `?status=`, `?user_identifier=`, `?category=`.
+   - `GET /api/complaints/&lt;id&gt;/`: Details with timeline history.
+   - `POST /api/complaints/&lt;id&gt;/assign_crew/`: `{ &quot;crew_id&quot;: 1 }` -&gt; marks ticket ASSIGNED, crew unavailable.
+   - `POST /api/complaints/&lt;id&gt;/resolve/`: `{ &quot;crew_notes&quot;: &quot;Replaced fuse&quot; }` -&gt; marks RESOLVED.
+   - `POST /api/complaints/&lt;id&gt;/verify/`: `{ &quot;action&quot;: &quot;CONFIRM&quot; }` -&gt; VERIFIED, or `{ &quot;action&quot;: &quot;REJECT&quot;, &quot;reason&quot;: &quot;Still leaking&quot; }` -&gt; REOPENED.
+   - `GET /api/admin/campus-health/`: Returns JSON stats (total open, critical count, resolved today, category breakdown, campus health index 0-100%).
+   - `GET /api/admin/crews/`: Returns list of crews with status and live coordinates.
+
+5. Seed Data Script (`seed_acts_data.py`):
+   - Create a standalone python script that seeds 6 realistic ABESEC campus complaints (Hostel 1, Aryabhatta Block, Central Mess, Ramanujan Lab) and 4 maintenance crews.
+
+Please implement all files, apply migrations (`python manage.py makemigrations` and `python manage.py migrate`), create `seed_acts_data.py`, run the seed script, and output verification cURL commands.
+</code></pre>
+<hr />
+<h2>📋 PART 3: Exact Specifications &amp; Verification</h2>
+<h3>1. Folder Structure Expected in Friend's Repo:</h3>
+<pre><code>acts_backend_clean/
+├── manage.py
+├── seed_acts_data.py
+├── acts_core/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+└── triage_engine/
+    ├── __init__.py
+    ├── admin.py
+    ├── apps.py
+    ├── models.py
+    ├── serializers.py
+    ├── triage_service.py   &lt;-- Clustering &amp; Haversine formula
+    ├── views.py
+    └── urls.py
+</code></pre>
+<h3>2. ABESEC Campus Coordinates Reference:</h3>
+<ul>
+<li><strong>Campus Center</strong>: <code>28.6341, 77.4474</code></li>
+<li><strong>Hostel Blocks</strong>: <code>28.6350, 77.4480</code></li>
+<li><strong>Academic Block (Aryabhatta)</strong>: <code>28.6335, 77.4465</code></li>
+<li><strong>Central Library / Auditorium</strong>: <code>28.6330, 77.4485</code></li>
+</ul>
+<h3>3. Verification Commands for Friend:</h3>
+<pre><code class="language-bash"># 1. Run migrations and seed
+python manage.py makemigrations
+python manage.py migrate
+python seed_acts_data.py
+
+# 2. Start server
+python manage.py runserver 0.0.0.0:8000
+
+# 3. Test in another terminal:
+curl http://127.0.0.1:8000/api/admin/campus-health/
+curl http://127.0.0.1:8000/api/complaints/
+</code></pre>
+<hr />
+<h2>🤝 PART 4: Integration with Our Flutter Frontend</h2>
+<p>Once your friend pushes his repo:
+1. We pull or clone his repo.
+2. In our Flutter app <code>lib/config/api_constants.dart</code>, his server URL will plug-and-play.
+3. Every endpoint name, payload structure, and field name matches exactly what Flutter already expects.</p>
+</body>
+</html>

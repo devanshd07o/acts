@@ -61,10 +61,11 @@ def cluster_and_weight_complaint(
         )
 
         # Check geographic proximity and campus zone
-        if dist <= max_distance_meters or (complaint.campus_zone and complaint.campus_zone == cluster.campus_zone):
+        same_zone = bool(complaint.campus_zone and cluster.campus_zone and complaint.campus_zone.strip().lower() == cluster.campus_zone.strip().lower())
+        if dist <= max_distance_meters or same_zone:
             sim = text_similarity_ratio(complaint.raw_text, cluster.title)
-            # If within 30 meters or strong text overlap
-            if dist <= 30.0 or sim >= min_similarity_threshold:
+            # If within 30 meters, strong text overlap, or identical campus zone
+            if dist <= 30.0 or sim >= min_similarity_threshold or same_zone:
                 matched_cluster = cluster
                 break
 

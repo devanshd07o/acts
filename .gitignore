@@ -16,6 +16,8 @@ staticfiles/
 .env
 .env.local
 *.env
+oauth*.json
+mobile/assets/config/
 
 # Virtual environments
 venv/
@@ -44,6 +46,26 @@ mobile/android/.gradle
 mobile/android/local.properties
 mobile/ios/Flutter/Generated.xcconfig
 mobile/ios/Flutter/flutter_export_environment.sh
+
+# Node & Web
+node_modules/
+dist/
+.codegraph/
+
+# Temp scratch scripts & images in root
+abes_*.jpg
+abes_*.json
+abesec_*.json
+analyze_*.py
+download_*.py
+fetch_*.py
+filter_*.py
+inspect_*.py
+parse_*.py
+parsed_*.json
+search_*.py
+osm_*.txt
+osm_*.json
 
 # IDEs & OS
 .idea/

@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.acts" "\0"
-            VALUE "FileDescription", "acts_mobile" "\0"
+            VALUE "CompanyName", "ACTS Institutional Systems" "\0"
+            VALUE "FileDescription", "ACTS - Autonomous Civic Triage System" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "acts_mobile" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.acts. All rights reserved." "\0"
+            VALUE "InternalName", "ACTS" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 ACTS. All rights reserved." "\0"
             VALUE "OriginalFilename", "acts_mobile.exe" "\0"
-            VALUE "ProductName", "acts_mobile" "\0"
+            VALUE "ProductName", "ACTS - Autonomous Civic Triage System" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

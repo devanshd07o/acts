@@ -53,6 +53,11 @@ class ComplaintCluster(models.Model):
     status = models.CharField(max_length=30, choices=ComplaintStatus.choices, default=ComplaintStatus.SUBMITTED)
     assigned_crew = models.ForeignKey(MaintenanceCrew, null=True, blank=True, on_delete=models.SET_NULL, related_name='clusters')
     
+    # Committee Oversight (Faculty, Worker Crew, Student Lead)
+    faculty_supervisor = models.CharField(max_length=200, blank=True, default='', help_text="Designated teacher / faculty mentor")
+    student_lead = models.CharField(max_length=200, blank=True, default='', help_text="Student observer / council lead")
+    committee_notes = models.TextField(blank=True, default='', help_text="Notes and directives from oversight committee")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -112,6 +117,11 @@ class Complaint(models.Model):
     is_confirmed_by_reporter = models.BooleanField(null=True, blank=True, help_text="True if reporter confirms fix, False if reopened")
     reporter_feedback = models.TextField(blank=True, default='')
     admin_notes = models.TextField(blank=True, default='')
+
+    # Committee Oversight
+    faculty_supervisor = models.CharField(max_length=200, blank=True, default='')
+    student_lead = models.CharField(max_length=200, blank=True, default='')
+    committee_notes = models.TextField(blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -27,6 +27,9 @@ class ComplaintClusterSerializer(serializers.ModelSerializer):
             'status',
             'assigned_crew',
             'assigned_crew_details',
+            'faculty_supervisor',
+            'student_lead',
+            'committee_notes',
             'preview_complaint_id',
             'created_at',
             'updated_at'
@@ -56,6 +59,7 @@ class ComplaintSerializer(serializers.ModelSerializer):
     assigned_department = serializers.CharField(read_only=True)
     is_emergency = serializers.BooleanField(read_only=True)
     ai_summary = serializers.CharField(read_only=True)
+    crowd_report_count = serializers.IntegerField(source='cluster.crowd_report_count', read_only=True, default=1)
 
     class Meta:
         model = Complaint
@@ -63,6 +67,7 @@ class ComplaintSerializer(serializers.ModelSerializer):
             'id',
             'user',
             'user_identifier',
+            'crowd_report_count',
             'citizen_description',
             'raw_text',
             'image',

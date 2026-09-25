@@ -6,10 +6,10 @@ class SeverityBadge extends StatelessWidget {
   final double fontSize;
 
   const SeverityBadge({
-    Key? key,
+    super.key,
     required this.severity,
     this.fontSize = 12.0,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class SeverityBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.15),
+        color: badgeColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: badgeColor, width: 1),
       ),

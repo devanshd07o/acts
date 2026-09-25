@@ -2,11 +2,13 @@ from django.urls import path
 from .views import (
     HealthCheckView,
     CurrentUserView,
+    CitizenRegisterView,
     ReportIssueView,
     ComplaintCreateView,
     ComplaintListView,
     ComplaintDetailView,
     ComplaintConfirmResolutionView,
+    ComplaintUpvoteView,
     AdminClusterListView,
     AdminMapMarkersView,
     CampusHealthAnalyticsView,
@@ -21,12 +23,14 @@ urlpatterns = [
     # System Health
     path('health/', HealthCheckView.as_view(), name='health-check'),
     path('me/', CurrentUserView.as_view(), name='current-user'),
+    path('auth/register/', CitizenRegisterView.as_view(), name='citizen-register'),
 
     # Citizen Reporting & Lifecycle
     path('complaints/report/', ReportIssueView.as_view(), name='complaint-report'),
     path('complaints/report-issue/', ReportIssueView.as_view(), name='report-issue'),
     path('complaints/', ComplaintListView.as_view(), name='complaint-list'),
     path('complaints/<uuid:id>/', ComplaintDetailView.as_view(), name='complaint-detail'),
+    path('complaints/<uuid:id>/upvote/', ComplaintUpvoteView.as_view(), name='complaint-upvote'),
     path('complaints/<uuid:id>/confirm/', ComplaintConfirmResolutionView.as_view(), name='complaint-confirm-resolution'),
 
     # Admin Live Command Center & Triage

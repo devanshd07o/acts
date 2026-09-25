@@ -14,32 +14,30 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   return (
     <RoleProvider>
-      <div className="min-h-[100dvh] bg-[#eceff1]">
-        <div className="flex justify-center sm:py-8 sm:px-4 h-[100dvh] items-center">
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
+      <div className="min-h-[100dvh] w-full bg-[#eceff1] flex flex-col">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
 
-            {/* Citizen Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['citizen']} />}>
-              <Route path="/report" element={<ReportForm />} />
-              <Route path="/issues" element={<MyIssues />} />
-              <Route path="/notifications" element={<Notifications />} />
-            </Route>
+          {/* Citizen Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['citizen']} />}>
+            <Route path="/report" element={<ReportForm />} />
+            <Route path="/issues" element={<MyIssues />} />
+            <Route path="/notifications" element={<Notifications />} />
+          </Route>
 
-            {/* Admin Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin" element={<TicketList />} />
-            </Route>
+          {/* Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin" element={<TicketList />} />
+          </Route>
 
-            {/* Common Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['citizen', 'admin']} />}>
-              <Route path="/map" element={<MapView />} />
-              <Route path="/issue/:id" element={<IssueDetail />} />
-            </Route>
-          </Routes>
-        </div>
+          {/* Common Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['citizen', 'admin']} />}>
+            <Route path="/map" element={<MapView />} />
+            <Route path="/issue/:id" element={<IssueDetail />} />
+          </Route>
+        </Routes>
       </div>
     </RoleProvider>
   );

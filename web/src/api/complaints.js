@@ -40,3 +40,11 @@ export const getComplaint = (id) => {
 export const getNotifications = () => {
     return fetchClient(`/notifications/`);
 };
+
+export const confirmComplaintResolution = (id, isConfirmed, feedback = '') => {
+    return fetchClient(`/complaints/${id}/confirm/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_confirmed: isConfirmed, feedback })
+    });
+};

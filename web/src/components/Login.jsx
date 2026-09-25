@@ -72,6 +72,35 @@ const Login = () => {
                     >
                         {loading ? 'Logging in...' : 'Log In'}
                     </button>
+
+                    <div className="flex gap-2 mt-2 w-full">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                localStorage.setItem('acts_token', 'demo_admin_jwt_token');
+                                localStorage.setItem('acts_name', 'Campus Admin');
+                                localStorage.setItem('acts_email', 'admin.dispatch@abesec.ac.in');
+                                login('admin');
+                                navigate('/admin/dashboard');
+                            }}
+                            className="flex-1 py-2.5 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                            <ShieldCheck size={14} /> Quick Admin
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                localStorage.setItem('acts_token', 'demo_citizen_jwt_token');
+                                localStorage.setItem('acts_name', 'Devansh Dubey');
+                                localStorage.setItem('acts_email', 'devansh.dubey@abesec.ac.in');
+                                login('citizen');
+                                navigate('/report');
+                            }}
+                            className="flex-1 py-2.5 px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                            <User size={14} /> Quick Student
+                        </button>
+                    </div>
                 </form>
             </div>
         </MobileLayout>

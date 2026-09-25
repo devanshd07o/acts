@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import MobileLayout from './MobileLayout';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { getComplaint } from '../api/complaints';
+import { getComplaint, confirmComplaintResolution } from '../api/complaints';
 import { updateClusterStatus, updateClusterPriority, getCrews } from '../api/admin';
 import { getStatusDisplay, getCitizenStatusDisplay, getStatusClasses } from '../utils/status';
 import { useRole } from '../context/RoleContext';
-import { CheckCircle, Circle, Clock, SlidersHorizontal, ShieldAlert, Wrench, Check, X } from 'lucide-react';
+import { CheckCircle, Circle, Clock, SlidersHorizontal, ShieldAlert, Wrench, Check, X, GraduationCap, Users, ClipboardCheck, AlertTriangle } from 'lucide-react';
 
 const IssueDetail = () => {
     const { id } = useParams();
@@ -18,13 +18,16 @@ const IssueDetail = () => {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [toastMessage, setToastMessage] = useState(null);
 
-    // Admin Override Panel state
+    // Admin Override & Resolution Committee state
     const [showOverrideModal, setShowOverrideModal] = useState(false);
     const [crews, setCrews] = useState([]);
     const [overridePriority, setOverridePriority] = useState(5);
     const [overrideStatus, setOverrideStatus] = useState('QUEUED');
     const [overrideCrew, setOverrideCrew] = useState('');
     const [overrideNotes, setOverrideNotes] = useState('');
+    const [overrideFaculty, setOverrideFaculty] = useState('');
+    const [overrideStudent, setOverrideStudent] = useState('');
+    const [overrideCommitteeNotes, setOverrideCommitteeNotes] = useState('');
     const [savingOverride, setSavingOverride] = useState(false);
 
     // Image sizing logic for YOLO bounds
@@ -54,6 +57,9 @@ const IssueDetail = () => {
             const crewId = complaint.crew_details?.id || complaint.assigned_crew || '';
             setOverrideCrew(crewId ? String(crewId) : '');
             setOverrideNotes(complaint.admin_notes || '');
+            setOverrideFaculty(complaint.cluster_details?.faculty_supervisor || complaint.faculty_supervisor || '');
+            setOverrideStudent(complaint.cluster_details?.student_lead || complaint.student_lead || '');
+            setOverrideCommitteeNotes(complaint.cluster_details?.committee_notes || complaint.committee_notes || '');
         }
     }, [complaint]);
 
@@ -95,11 +101,37 @@ const IssueDetail = () => {
             await updateClusterStatus(targetId, 'RESOLVED');
             setComplaint(prev => ({ ...prev, status: 'RESOLVED' }));
             setShowConfirmModal(false);
-            setToastMessage("✓ Issue marked as completed");
+            setToastMessage("✓ Issue marked as completed and sent for student verification");
             setTimeout(() => setToastMessage(null), 3000);
         } catch (err) {
             setShowConfirmModal(false);
             setToastMessage("Failed to update status");
+            setTimeout(() => setToastMessage(null), 3000);
+        }
+    };
+
+    const handleCitizenConfirm = async () => {
+        try {
+            await confirmComplaintResolution(id, true);
+            setComplaint(prev => ({ ...prev, status: 'CLOSED', is_confirmed_by_reporter: true }));
+            setToastMessage("✓ Thank you! Issue confirmed as resolved and closed.");
+            setTimeout(() => setToastMessage(null), 4000);
+        } catch (err) {
+            setToastMessage("Failed to confirm resolution");
+            setTimeout(() => setToastMessage(null), 3000);
+        }
+    };
+
+    const handleCitizenReopen = async () => {
+        const feedback = window.prompt("Why is this issue still unresolved? (e.g. Wire still exposed, leakage continuing):");
+        if (!feedback) return;
+        try {
+            await confirmComplaintResolution(id, false, feedback);
+            setComplaint(prev => ({ ...prev, status: 'REOPENED', reporter_feedback: feedback, is_confirmed_by_reporter: false }));
+            setToastMessage("⚠️ Issue reopened and escalated back to oversight committee.");
+            setTimeout(() => setToastMessage(null), 4000);
+        } catch (err) {
+            setToastMessage("Failed to reopen issue");
             setTimeout(() => setToastMessage(null), 3000);
         }
     };
@@ -112,7 +144,10 @@ const IssueDetail = () => {
                 computed_priority: parseFloat(overridePriority),
                 status: overrideStatus,
                 assigned_crew: overrideCrew ? overrideCrew : null,
-                admin_notes: overrideNotes
+                admin_notes: overrideNotes,
+                faculty_supervisor: overrideFaculty,
+                student_lead: overrideStudent,
+                committee_notes: overrideCommitteeNotes
             };
 
             const response = await updateClusterPriority(targetId, payload);
@@ -346,7 +381,52 @@ const IssueDetail = () => {
                                     </select>
                                 </div>
 
-                                {/* 4. Admin Notes */}
+                                {/* 4. Faculty Supervisor (Teacher Mentor) */}
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                                        <GraduationCap size={14} className="text-slate-600" />
+                                        Faculty Supervisor / Teacher Mentor
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={overrideFaculty}
+                                        onChange={(e) => setOverrideFaculty(e.target.value)}
+                                        placeholder="e.g. Dr. R.K. Sharma (Chief Proctor / HoD)"
+                                        className="w-full bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-acts-admin font-medium shadow-2xs"
+                                    />
+                                </div>
+
+                                {/* 5. Student Representative / Council Lead */}
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                                        <Users size={14} className="text-slate-600" />
+                                        Student Council Lead / Observer
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={overrideStudent}
+                                        onChange={(e) => setOverrideStudent(e.target.value)}
+                                        placeholder="e.g. Aarav Patel (Hostel Council Lead)"
+                                        className="w-full bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-acts-admin font-medium shadow-2xs"
+                                    />
+                                </div>
+
+                                {/* 6. Committee Directives & Guidelines */}
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                                        <ClipboardCheck size={14} className="text-slate-600" />
+                                        Committee Directives & Guidelines
+                                    </label>
+                                    <textarea
+                                        rows={2}
+                                        value={overrideCommitteeNotes}
+                                        onChange={(e) => setOverrideCommitteeNotes(e.target.value)}
+                                        placeholder="Guidelines for field crew and faculty inspection criteria..."
+                                        className="w-full bg-white border border-slate-300 text-slate-800 text-xs rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-acts-admin shadow-2xs resize-none"
+                                    />
+                                </div>
+
+                                {/* 7. Admin Notes */}
                                 <div>
                                     <label className="block text-[12px] font-bold text-slate-800 mb-1">
                                         Admin Notes (Optional)
@@ -545,9 +625,60 @@ const IssueDetail = () => {
                                 )}
                             </div>
 
+                            {/* Resolution Committee Card */}
+                            {(complaint.faculty_supervisor || complaint.student_lead || complaint.committee_notes || complaint.cluster_details?.faculty_supervisor) && (
+                                <div className="mb-4 bg-blue-50/70 border border-blue-200 rounded-xl p-3 shadow-2xs">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="text-[12px] font-bold text-blue-900 uppercase tracking-wide flex items-center gap-1.5 m-0">
+                                            <Users size={14} className="text-blue-600" />
+                                            Resolution Oversight Committee
+                                        </h3>
+                                        <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full border border-blue-200">
+                                            Tri-Party Governance
+                                        </span>
+                                    </div>
+                                    <div className="space-y-1.5 text-xs text-slate-700">
+                                        {complaint.faculty_supervisor && (
+                                            <div className="flex items-center gap-2">
+                                                <GraduationCap size={13} className="text-blue-700 shrink-0" />
+                                                <span className="text-slate-500 font-medium">Faculty Mentor:</span>
+                                                <span className="font-bold text-slate-900">{complaint.faculty_supervisor}</span>
+                                            </div>
+                                        )}
+                                        {complaint.student_lead && (
+                                            <div className="flex items-center gap-2">
+                                                <Users size={13} className="text-indigo-700 shrink-0" />
+                                                <span className="text-slate-500 font-medium">Student Observer:</span>
+                                                <span className="font-bold text-slate-900">{complaint.student_lead}</span>
+                                            </div>
+                                        )}
+                                        {complaint.committee_notes && (
+                                            <div className="mt-2 pt-2 border-t border-blue-100 text-[11px] text-slate-600 italic">
+                                                "{complaint.committee_notes}"
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Deduplication & Crowd Clustered Status */}
+                            <div className="mb-4 bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+                                <div>
+                                    <span className="font-bold text-slate-800">Spatial Deduplication:</span>
+                                    <p className="text-[11px] text-slate-500 mt-0.5">
+                                        {complaint.cluster_details?.report_count > 1
+                                            ? `Crowd-clustered: ${complaint.cluster_details.report_count} nearby student reports merged`
+                                            : 'Verified Unique Defect Ticket (Zero duplicates)'}
+                                    </p>
+                                </div>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${complaint.cluster_details?.report_count > 1 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
+                                    {complaint.cluster_details?.report_count > 1 ? 'Crowd Weighted' : 'Unique'}
+                                </span>
+                            </div>
+
                             {complaint.admin_notes && (
                                 <div className="mb-4 text-orange-900 bg-orange-50 p-2.5 rounded text-[13px] border border-orange-200 font-medium">
-                                    <div className="text-[10px] uppercase tracking-wider text-orange-700 font-extrabold mb-0.5">Admin Override Notes</div>
+                                    <div className="text-[10px] uppercase tracking-wider text-orange-700 font-extrabold mb-0.5">Admin Directives</div>
                                     {complaint.admin_notes}
                                 </div>
                             )}
@@ -571,6 +702,43 @@ const IssueDetail = () => {
                                 </div>
                             </div>
 
+                            {/* 2-Way Handshake Resolution Verification for Citizen */}
+                            {role === 'citizen' && complaint.status === 'RESOLVED' && (
+                                <div className="mt-4 bg-emerald-50 border border-emerald-300 p-4 rounded-xl shadow-sm">
+                                    <div className="font-bold text-emerald-900 text-sm mb-1 flex items-center gap-2">
+                                        <CheckCircle size={18} className="text-emerald-600" /> Resolution Submitted by Committee
+                                    </div>
+                                    <p className="text-xs text-emerald-700 mb-3">
+                                        The repair work has been marked completed by the committee. Please inspect on site and verify if the issue is completely fixed.
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={handleCitizenConfirm}
+                                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-lg text-xs transition shadow-sm flex items-center justify-center gap-1"
+                                        >
+                                            <Check size={14} /> Confirm & Close
+                                        </button>
+                                        <button
+                                            onClick={handleCitizenReopen}
+                                            className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 px-3 rounded-lg text-xs transition shadow-sm flex items-center justify-center gap-1"
+                                        >
+                                            <AlertTriangle size={14} /> Still Broken (Reopen)
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {complaint.status === 'REOPENED' && (
+                                <div className="mt-4 bg-rose-50 border border-rose-300 p-3 rounded-xl text-xs text-rose-900">
+                                    <p className="font-bold mb-1 flex items-center gap-1.5">
+                                        <AlertTriangle size={15} className="text-rose-600" /> Reopened by Student Reporter
+                                    </p>
+                                    <p className="italic text-rose-800">
+                                        "{complaint.reporter_feedback || 'Fix was ineffective, issue persisted after initial completion.'}"
+                                    </p>
+                                </div>
+                            )}
+
                             {role === 'citizen' && renderTimeline(complaint.status)}
 
                             {role === 'admin' && complaint.status !== 'RESOLVED' && complaint.status !== 'CLOSED' && (
@@ -578,7 +746,7 @@ const IssueDetail = () => {
                                     onClick={() => setShowConfirmModal(true)}
                                     className="mt-4 w-full bg-acts-admin text-white py-3 rounded-lg font-bold hover:bg-slate-700 transition"
                                 >
-                                    Mark as Completed
+                                    Approve Work & Mark Resolved
                                 </button>
                             )}
 

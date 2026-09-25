@@ -6,10 +6,10 @@ class CustomMapPin extends StatelessWidget {
   final VoidCallback? onTap;
 
   const CustomMapPin({
-    Key? key,
+    super.key,
     required this.severity,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class CustomMapPin extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: pinColor.withOpacity(0.4),
+                  color: pinColor.withValues(alpha: 0.4),
                   blurRadius: 8,
                   spreadRadius: 2,
                 ),

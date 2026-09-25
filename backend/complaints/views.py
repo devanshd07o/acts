@@ -1,4 +1,5 @@
 import os
+from django.contrib.auth.models import User
 from django.db.models import Count, Avg
 from django.db import transaction
 from rest_framework import status, generics
@@ -6,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import (
     Complaint,
@@ -32,6 +34,7 @@ from .services import (
     map_to_department,
     compress_image,
     cluster_and_weight_complaint,
+    calculate_crowd_priority,
     dispatch_cluster_to_crew,
     evaluate_submission_trust,
     adjust_user_trust_score
@@ -48,7 +51,57 @@ class HealthCheckView(APIView):
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        return Response({"username": request.user.username, "is_admin": request.user.is_staff})
+        full_name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+        email = request.user.email or (f"{request.user.username}@abesec.ac.in" if '@' not in request.user.username else request.user.username)
+        return Response({
+            "username": request.user.username,
+            "full_name": full_name,
+            "email": email,
+            "is_admin": request.user.is_staff
+        })
+
+
+class CitizenRegisterView(APIView):
+    permission_classes = []
+
+    def post(self, request):
+        username = request.data.get('username', '').strip()
+        password = request.data.get('password', '').strip()
+        email = request.data.get('email', '').strip()
+        full_name = request.data.get('full_name', '').strip()
+        role = request.data.get('role', 'student').strip().lower()
+
+        if not username or not password:
+            return Response({"detail": "Username and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if len(password) < 6:
+            return Response({"detail": "Password must be at least 6 characters long."}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(username=username).exists():
+            return Response({"detail": "An account with this Institutional ID / Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+        first_name = full_name.split(' ')[0] if full_name else ''
+        last_name = ' '.join(full_name.split(' ')[1:]) if (full_name and len(full_name.split(' ')) > 1) else ''
+
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            email=email,
+            first_name=first_name,
+            last_name=last_name
+        )
+        is_admin = (role == 'admin' or 'admin' in username.lower() or 'admin' in email.lower())
+        user.is_staff = is_admin
+        user.save()
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "detail": "Account registered successfully in campus database.",
+            "username": user.username,
+            "full_name": full_name or user.username,
+            "email": user.email,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "is_admin": user.is_staff
+        }, status=status.HTTP_201_CREATED)
 
 
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
@@ -189,7 +242,7 @@ class ComplaintListView(generics.ListAPIView):
         if self.request.user and self.request.user.is_authenticated:
             queryset = Complaint.objects.filter(user=self.request.user).select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
         else:
-            uid = self.request.query_params.get('user_identifier', 'citizen_mobile')
+            uid = self.request.query_params.get('user_identifier', 'all')
             if uid == 'all' or not uid:
                 queryset = Complaint.objects.all().select_related('cluster', 'assigned_crew', 'cluster__assigned_crew')
             else:
@@ -251,6 +304,46 @@ class ComplaintConfirmResolutionView(APIView):
 
         complaint.save()
         return Response({"message": msg, "status": complaint.status})
+
+
+class ComplaintUpvoteView(APIView):
+    """
+    Crowd Upvote Action:
+    Allows citizens to upvote an existing complaint/cluster, directly boosting
+    its crowd_report_count and computed priority in the triage queue.
+    """
+    permission_classes = []
+
+    def post(self, request, id):
+        cluster = None
+        complaint = None
+
+        try:
+            complaint = Complaint.objects.select_related('cluster').get(id=id)
+            cluster = complaint.cluster
+        except Complaint.DoesNotExist:
+            try:
+                cluster = ComplaintCluster.objects.get(id=id)
+            except ComplaintCluster.DoesNotExist:
+                return Response({"detail": "Incident not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if cluster:
+            cluster.crowd_report_count += 1
+            cluster.computed_priority = calculate_crowd_priority(cluster.base_severity, cluster.crowd_report_count)
+            cluster.save(update_fields=['crowd_report_count', 'computed_priority', 'updated_at'])
+            return Response({
+                "message": "Incident upvoted successfully.",
+                "id": str(id),
+                "crowd_report_count": cluster.crowd_report_count,
+                "computed_priority": cluster.computed_priority,
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            "message": "Upvoted.",
+            "id": str(id),
+            "crowd_report_count": 1,
+            "computed_priority": 5.0,
+        }, status=status.HTTP_200_OK)
 
 
 class AdminClusterListView(generics.ListAPIView):
@@ -409,13 +502,37 @@ class PriorityOverrideView(APIView):
                 except MaintenanceCrew.DoesNotExist:
                     return Response({"error": f"MaintenanceCrew with id '{crew_id}' not found"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 4. Update Admin Notes
+        # 4. Update Admin & Committee Oversight Notes
         admin_notes = data.get('admin_notes')
         if admin_notes is not None:
             if cluster:
                 cluster.reports.all().update(admin_notes=admin_notes)
             if comp:
                 comp.admin_notes = admin_notes
+
+        faculty_supervisor = data.get('faculty_supervisor')
+        if faculty_supervisor is not None:
+            if cluster:
+                cluster.faculty_supervisor = faculty_supervisor
+                cluster.reports.all().update(faculty_supervisor=faculty_supervisor)
+            if comp:
+                comp.faculty_supervisor = faculty_supervisor
+
+        student_lead = data.get('student_lead')
+        if student_lead is not None:
+            if cluster:
+                cluster.student_lead = student_lead
+                cluster.reports.all().update(student_lead=student_lead)
+            if comp:
+                comp.student_lead = student_lead
+
+        committee_notes = data.get('committee_notes')
+        if committee_notes is not None:
+            if cluster:
+                cluster.committee_notes = committee_notes
+                cluster.reports.all().update(committee_notes=committee_notes)
+            if comp:
+                comp.committee_notes = committee_notes
 
         if cluster:
             cluster.save()
