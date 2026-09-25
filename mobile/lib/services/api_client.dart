@@ -263,6 +263,51 @@ class ApiClient {
     }
   }
 
+  Future<Map<String, dynamic>> loginDemo({
+    required String role,
+    required String username,
+    String? rollNo,
+    String? employeeId,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiConstants.demoAuth,
+        data: {
+          'role': role,
+          'username': username,
+          if (rollNo != null && rollNo.isNotEmpty) 'roll_no': rollNo,
+          if (employeeId != null && employeeId.isNotEmpty) 'employee_id': employeeId,
+        },
+      );
+
+      final access = res.data['access'];
+      final refresh = res.data['refresh'];
+      final isAdmin = res.data['is_admin'] == true;
+      final returnedUsername = res.data['username'] ?? username;
+      final fullName = res.data['full_name'] ?? returnedUsername;
+      final email = res.data['email'] ?? '';
+      final resolvedRollNo = res.data['roll_no']?.toString() ?? rollNo;
+      final resolvedEmpId = res.data['employee_id']?.toString() ?? employeeId;
+
+      if (access != null && refresh != null) {
+        await _auth.saveAuth(
+          accessToken: access,
+          refreshToken: refresh,
+          username: returnedUsername,
+          fullName: fullName,
+          email: email,
+          isAdmin: isAdmin,
+          rollNo: resolvedRollNo,
+          employeeId: resolvedEmpId,
+        );
+      }
+
+      return res.data;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> upvoteComplaint(String id) async {
     try {
       final res = await _dio.post('${ApiConstants.complaintDetail}$id/upvote/');

@@ -4,6 +4,7 @@ from .views import (
     CurrentUserView,
     CitizenRegisterView,
     GoogleOAuthBridgeView,
+    DemoLoginView,
     ReportIssueView,
     ComplaintCreateView,
     ComplaintListView,
@@ -26,6 +27,7 @@ urlpatterns = [
     path('me/', CurrentUserView.as_view(), name='current-user'),
     path('auth/register/', CitizenRegisterView.as_view(), name='citizen-register'),
     path('auth/google/', GoogleOAuthBridgeView.as_view(), name='google-auth-bridge'),
+    path('auth/demo/', DemoLoginView.as_view(), name='demo-login'),
 
     # Citizen Reporting & Lifecycle
     path('complaints/report/', ReportIssueView.as_view(), name='complaint-report'),

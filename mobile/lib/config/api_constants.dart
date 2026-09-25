@@ -4,7 +4,7 @@ import '../services/auth_service.dart';
 class ApiConstants {
   static String get defaultBaseUrl {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8000';
+      return 'http://172.16.10.21:8000';
     }
     return 'http://127.0.0.1:8000';
   }
@@ -23,6 +23,7 @@ class ApiConstants {
   static const String currentUser = '/api/me/';
   static const String citizenRegister = '/api/auth/register/';
   static const String googleAuthBridge = '/api/auth/google/';
+  static const String demoAuth = '/api/auth/demo/';
 
   // Citizen Endpoints
   static const String reportComplaint = '/api/complaints/report/';

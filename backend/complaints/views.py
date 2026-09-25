@@ -226,6 +226,93 @@ class GoogleOAuthBridgeView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class DemoLoginView(APIView):
+    """
+    Direct Demo Authentication Bridge:
+    Allows 1-click login as demo_student1, demo_student2, demo_student3, or demo_admin
+    with Step-2 identity verification synchronization.
+    """
+    permission_classes = []
+
+    def post(self, request):
+        role = request.data.get('role', 'student').strip().lower()
+        username = request.data.get('username', '').strip()
+        roll_no = request.data.get('roll_no', '').strip()
+        employee_id = request.data.get('employee_id', '').strip()
+
+        if role == 'admin' or username == 'demo_admin':
+            user = User.objects.filter(username='demo_admin').first()
+            if not user:
+                user = User.objects.create_user(
+                    username='demo_admin',
+                    email='demo.admin@abesec.ac.in',
+                    first_name='Dr. Amit',
+                    last_name='Saxena',
+                    is_staff=True
+                )
+            user.set_password('Demo@2026')
+            user.is_staff = True
+            user.save()
+            profile, _ = UserProfile.objects.update_or_create(
+                user=user,
+                defaults={
+                    'role': 'admin',
+                    'employee_id': employee_id or 'EMP-2026-1049',
+                    'department': 'Administration & Infrastructure',
+                    'designation': 'Chief Infrastructure Officer',
+                    'is_verified': True
+                }
+            )
+        else:
+            if username not in ['demo_student1', 'demo_student2', 'demo_student3']:
+                username = 'demo_student1'
+            student_defaults = {
+                'demo_student1': {'first_name': 'Arjun', 'last_name': 'Sharma', 'roll_no': '2100320100045', 'dept': 'Computer Science & Engineering'},
+                'demo_student2': {'first_name': 'Priya', 'last_name': 'Verma', 'roll_no': '2100320100046', 'dept': 'Electronics & Communication Engineering'},
+                'demo_student3': {'first_name': 'Rahul', 'last_name': 'Gupta', 'roll_no': '2100320100047', 'dept': 'Mechanical Engineering'},
+            }
+            meta = student_defaults[username]
+            user = User.objects.filter(username=username).first()
+            if not user:
+                user = User.objects.create_user(
+                    username=username,
+                    email=f'{username}@abesec.ac.in',
+                    first_name=meta['first_name'],
+                    last_name=meta['last_name'],
+                    is_staff=False
+                )
+            user.set_password('Demo@2026')
+            user.is_staff = False
+            user.save()
+            profile, _ = UserProfile.objects.update_or_create(
+                user=user,
+                defaults={
+                    'role': 'student',
+                    'roll_no': roll_no or meta['roll_no'],
+                    'department': meta['dept'],
+                    'designation': 'Student',
+                    'is_verified': True
+                }
+            )
+
+        refresh = RefreshToken.for_user(user)
+        display_name = f"{user.first_name} {user.last_name}".strip() or user.username
+        return Response({
+            "detail": "Demo session verified and JWT issued.",
+            "username": user.username,
+            "full_name": display_name,
+            "email": user.email,
+            "role": profile.role,
+            "roll_no": profile.roll_no,
+            "employee_id": profile.employee_id,
+            "department": profile.department,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "is_admin": user.is_staff
+        }, status=status.HTTP_200_OK)
+
+
+
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 class ReportIssueView(APIView):

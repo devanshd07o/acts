@@ -171,12 +171,11 @@ class _NewQueryViewState extends State<NewQueryView> {
   }
 
   void _applyVoicePreset(String text) {
-    final current = _notesController.text.trim();
-    final combined = current.isEmpty ? text : "$current. $text";
-    _notesController.text = combined;
-    _notesController.selection = TextSelection.fromPosition(TextPosition(offset: combined.length));
+    _notesController.text = text;
+    _notesController.selection = TextSelection.fromPosition(TextPosition(offset: text.length));
     setState(() => _isVoiceRecording = false);
-    _onNotesChanged(combined);
+    _triggerAiAnalysis();
+    _checkDuplicateComplaints();
   }
 
   Future<void> _pickImage() async {
@@ -850,10 +849,12 @@ class _NewQueryViewState extends State<NewQueryView> {
                     spacing: 8,
                     runSpacing: 6,
                     children: [
-                      "⚡ Sparking electrical conduit on 2nd floor staircase",
-                      "💧 Severe water pipe leak flooding hallway",
-                      "🚧 Deep pavement fracture creating tripping hazard",
-                      "🗑️ Overflowing waste collection point near entrance",
+                      "💧 Washroom me pipe burst ho gaya hai, poora floor flood ho raha hai",
+                      "⚡ 2nd floor staircase par exposed electrical wire se spark nikal raha hai",
+                      "🚧 Main gate approach road par gehra pothole hai, urgent repair chahiye",
+                      "🕳️ Admin block ke peeche open sewer manhole bina cover ke dangerous hai",
+                      "🗑️ Hostel mess ke paas garbage bin overflow ho gaya hai, foul smell aa rahi hai",
+                      "💡 Library block ke samne street light kharab hai, andhera rehta hai",
                     ].map((phrase) {
                       return InkWell(
                         onTap: () => _applyVoicePreset(phrase),

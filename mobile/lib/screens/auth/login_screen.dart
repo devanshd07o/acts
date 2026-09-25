@@ -247,9 +247,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     required bool isAdmin,
     required String email,
     required String fullName,
+    String? initialRollNo,
+    String? initialEmployeeId,
   }) async {
-    final rollCtrl = TextEditingController(text: isAdmin ? '' : '2100320100045');
-    final empCtrl = TextEditingController(text: isAdmin ? 'EMP-2026-1049' : '');
+    final rollCtrl = TextEditingController(
+      text: isAdmin ? '' : (initialRollNo != null && initialRollNo.isNotEmpty ? initialRollNo : '2100320100045'),
+    );
+    final empCtrl = TextEditingController(
+      text: isAdmin ? (initialEmployeeId != null && initialEmployeeId.isNotEmpty ? initialEmployeeId : 'EMP-2026-1049') : '',
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return showDialog<Map<String, String>>(
@@ -633,9 +639,43 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       await _apiClient.login(usernameOrEmail, password);
       if (!mounted) return;
 
+      final isAdmin = _auth.isAdmin || _isOperationsMode;
+      final currentEmail = _auth.email.isNotEmpty ? _auth.email : usernameOrEmail;
+      final currentFullName = _auth.fullName.isNotEmpty ? _auth.fullName : usernameOrEmail;
+
+      // Step-2 Mandatory ID Verification (University Roll No for Student / Faculty Code for Admin)
+      final idResult = await _showStep2VerificationDialog(
+        context: context,
+        isAdmin: isAdmin,
+        email: currentEmail,
+        fullName: currentFullName,
+        initialRollNo: _auth.rollNo,
+        initialEmployeeId: _auth.employeeId,
+      );
+
+      if (idResult == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      final rollNo = idResult['roll_no'] ?? '';
+      final employeeId = idResult['employee_id'] ?? '';
+      await _auth.saveAuth(
+        accessToken: _auth.accessToken ?? '',
+        refreshToken: _auth.refreshToken ?? '',
+        username: _auth.username.isNotEmpty ? _auth.username : usernameOrEmail,
+        fullName: _auth.fullName.isNotEmpty ? _auth.fullName : usernameOrEmail,
+        email: _auth.email,
+        isAdmin: isAdmin,
+        rollNo: rollNo,
+        employeeId: employeeId,
+      );
+
+      if (!mounted) return;
+
       Navigator.pushReplacementNamed(
         context,
-        _auth.isAdmin ? AppRoutes.adminTickets : AppRoutes.home,
+        isAdmin ? AppRoutes.adminTickets : AppRoutes.home,
       );
     } catch (e) {
       if (mounted) {
@@ -644,6 +684,70 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  // --- DEMO LOGIN HANDLER (CONNECTS TO DJANGO DEMO USERS) ---
+  Future<void> _handleDemoLogin({
+    required String role,
+    required String username,
+    String? name,
+    String? roll,
+    String? empId,
+  }) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    final isAdmin = role == 'admin';
+
+    // Step-2 Verification Modal (User enters/confirms official institutional ID)
+    final idResult = await _showStep2VerificationDialog(
+      context: context,
+      isAdmin: isAdmin,
+      email: isAdmin ? 'demo.admin@abesec.ac.in' : '$username@abesec.ac.in',
+      fullName: name ?? (isAdmin ? 'Dr. Amit Saxena' : 'Student Demo'),
+      initialRollNo: roll ?? '2100320100045',
+      initialEmployeeId: empId ?? 'EMP-2026-1049',
+    );
+
+    if (idResult == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    final verifiedRoll = idResult['roll_no'] ?? roll ?? '';
+    final verifiedEmpId = idResult['employee_id'] ?? empId ?? '';
+
+    try {
+      await _apiClient.loginDemo(
+        role: role,
+        username: username,
+        rollNo: verifiedRoll,
+        employeeId: verifiedEmpId,
+      );
+    } catch (e) {
+      // Fallback offline session
+      await _auth.saveAuth(
+        accessToken: 'demo_token_${DateTime.now().millisecondsSinceEpoch}',
+        refreshToken: 'demo_refresh_token',
+        username: username,
+        fullName: name ?? (isAdmin ? 'Dr. Amit Saxena' : 'Student Demo'),
+        email: isAdmin ? 'demo.admin@abesec.ac.in' : '$username@abesec.ac.in',
+        isAdmin: isAdmin,
+        rollNo: verifiedRoll,
+        employeeId: verifiedEmpId,
+      );
+    }
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    Navigator.pushReplacementNamed(
+      context,
+      isAdmin ? AppRoutes.adminTickets : AppRoutes.home,
+    );
   }
 
   // --- REAL REGISTRATION HANDLER (CREATES VERIFIED USER IN CAMPUS DB) ---
@@ -1285,42 +1389,247 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       const SizedBox(height: 18),
 
       // Continue with Google Button
-      InkWell(
-        onTap: _isGoogleLoading ? null : _handleGoogleSignIn,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          height: 44,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1D2433) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE2E8F0),
-              width: 1.2,
-            ),
-          ),
-          child: _isGoogleLoading
-              ? const Center(
-                  child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2.0),
+      if (_isGoogleLoading) ...[
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1D2433) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.5),
+                    width: 1.2,
                   ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                ),
+                child: Row(
                   children: [
-                    _buildGoogleVectorLogo(size: 18),
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2.0),
+                    ),
                     const SizedBox(width: 10),
-                    Text(
-                      "Sign in with Google Workspace",
-                      style: GoogleFonts.comfortaa(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : AppTheme.textDisplayLight,
+                    Expanded(
+                      child: Text(
+                        "Connecting with Google...",
+                        style: GoogleFonts.comfortaa(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : AppTheme.textDisplayLight,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 44,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isGoogleLoading = false;
+                    _errorMessage = "Google authentication aborted by user.";
+                  });
+                },
+                icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFFEF4444)),
+                label: const Text(
+                  "Cancel",
+                  style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ] else ...[
+        InkWell(
+          onTap: _handleGoogleSignIn,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1D2433) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE2E8F0),
+                width: 1.2,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildGoogleVectorLogo(size: 18),
+                const SizedBox(width: 10),
+                Text(
+                  "Sign in with Google Workspace",
+                  style: GoogleFonts.comfortaa(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : AppTheme.textDisplayLight,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+
+      const SizedBox(height: 12),
+
+      // ── FAST DEMO SANDBOX CONNECTION CARD ──
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF131B2A) : const Color(0xFFF0FDF4),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: _isOperationsMode
+                ? const Color(0xFFF59E0B).withValues(alpha: 0.4)
+                : const Color(0xFF10B981).withValues(alpha: 0.4),
+            width: 1.2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: (_isOperationsMode ? const Color(0xFFF59E0B) : const Color(0xFF10B981)).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(
+                    _isOperationsMode ? Icons.verified_user_rounded : Icons.flash_on_rounded,
+                    size: 15,
+                    color: _isOperationsMode ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _isOperationsMode
+                        ? "Demo Admin Command Portal"
+                        : "Demo Student Portals (3 Isolated Accounts)",
+                    style: GoogleFonts.comfortaa(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (_isOperationsMode) ...[
+              SizedBox(
+                width: double.infinity,
+                height: 38,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFF59E0B),
+                    foregroundColor: const Color(0xFF0F172A),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                  ),
+                  icon: const Icon(Icons.shield_rounded, size: 16),
+                  label: const Text(
+                    "Connect as Demo Admin (EMP-2026-1049)",
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11.5),
+                  ),
+                  onPressed: () => _handleDemoLogin(
+                    role: 'admin',
+                    username: 'demo_admin',
+                    name: 'Dr. Amit Saxena',
+                    empId: 'EMP-2026-1049',
+                  ),
+                ),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                        side: const BorderSide(color: Color(0xFF0284C7)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () => _handleDemoLogin(
+                        role: 'student',
+                        username: 'demo_student1',
+                        name: 'Arjun Sharma',
+                        roll: '2100320100045',
+                      ),
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("Student 1", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0284C7))),
+                          Text("Arjun (Roll ...045)", style: TextStyle(fontSize: 9, color: Color(0xFF64748B))),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                        side: const BorderSide(color: Color(0xFF0284C7)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () => _handleDemoLogin(
+                        role: 'student',
+                        username: 'demo_student2',
+                        name: 'Priya Verma',
+                        roll: '2100320100046',
+                      ),
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("Student 2", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0284C7))),
+                          Text("Priya (Roll ...046)", style: TextStyle(fontSize: 9, color: Color(0xFF64748B))),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                        side: const BorderSide(color: Color(0xFF0284C7)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () => _handleDemoLogin(
+                        role: 'student',
+                        username: 'demo_student3',
+                        name: 'Rahul Gupta',
+                        roll: '2100320100047',
+                      ),
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("Student 3", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0284C7))),
+                          Text("Rahul (Roll ...047)", style: TextStyle(fontSize: 9, color: Color(0xFF64748B))),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ),
       ),
 
