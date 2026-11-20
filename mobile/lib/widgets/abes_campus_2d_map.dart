@@ -433,7 +433,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                       children: [
                         Text(
                           "ABES Engineering College 2D Campus Blueprint",
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w800,
                             color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -441,7 +441,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                         ),
                         Text(
                           "Click building directly on map or pick from categorized landmarks below",
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 10,
                             color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                           ),
@@ -463,7 +463,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                       const SizedBox(width: 5),
                       Text(
                         "${_selectedBuilding.latitude.toStringAsFixed(4)}° N, ${_selectedBuilding.longitude.toStringAsFixed(4)}° E",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF10B981),
@@ -539,7 +539,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                         const SizedBox(width: 5),
                         Text(
                           b.name,
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 10.5,
                             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                             color: isSelected
@@ -634,7 +634,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                                         textAlign: TextAlign.center,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.comfortaa(
+                                        style: GoogleFonts.plusJakartaSans(
                                           fontSize: 9.5,
                                           fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
                                           color: isSelected
@@ -683,7 +683,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                               ),
                               child: Text(
                                 "▲ NORTH: HOSTEL SECTOR (BEHIND COLLEGE & GROUND • GATE 2)",
-                                style: GoogleFonts.comfortaa(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.6,
@@ -702,7 +702,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                           child: Center(
                             child: Text(
                               "▼ SOUTH: NH-09 (DELHI-MEERUT EXPRESSWAY • MAIN GATE 1)",
-                              style: GoogleFonts.comfortaa(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 8.5,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.6,
@@ -730,7 +730,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                     children: [
                       Text(
                         _selectedBuilding.name,
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                           color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -739,7 +739,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                       const SizedBox(height: 2),
                       Text(
                         _selectedBuilding.departmentTag,
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                         ),
@@ -763,7 +763,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
                     child: DropdownButton<String>(
                       value: floors.contains(_selectedFloor) ? _selectedFloor : floors.first,
                       dropdownColor: isDark ? const Color(0xFF141A26) : Colors.white,
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -803,7 +803,7 @@ class _AbesCampus2DMapState extends State<AbesCampus2DMap> {
         ),
         child: Text(
           label,
-          style: GoogleFonts.comfortaa(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 10,
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
             color: isSelected ? Colors.white : (isDark ? Colors.white60 : const Color(0xFF475569)),

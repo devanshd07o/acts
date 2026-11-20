@@ -70,7 +70,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
         SnackBar(
           content: Text(
             "You have already upvoted this incident.",
-            style: GoogleFonts.comfortaa(),
+            style: GoogleFonts.plusJakartaSans(),
           ),
           backgroundColor: const Color(0xFFF97316),
         ),
@@ -93,7 +93,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
           backgroundColor: const Color(0xFF10B981),
           content: Text(
             "Upvoted! Incident urgency escalated (verified count: $crowdCount).",
-            style: GoogleFonts.comfortaa(fontWeight: FontWeight.w600),
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
           ),
         ),
       );
@@ -107,7 +107,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
             backgroundColor: const Color(0xFFDC2626),
             content: Text(
               "Upvote failed: $e",
-              style: GoogleFonts.comfortaa(),
+              style: GoogleFonts.plusJakartaSans(),
             ),
           ),
         );
@@ -239,7 +239,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                 children: [
                   Text(
                     "ACTS",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.5,
@@ -248,7 +248,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                   ),
                   Text(
                     "Cleaner Roads. Safer Campuses.",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,
@@ -278,7 +278,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                     const SizedBox(width: 5),
                     Text(
                       "Operations Console",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFFF97316),
@@ -331,7 +331,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                       const SizedBox(width: 6),
                       Text(
                         username,
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -409,7 +409,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                 const SizedBox(width: 5),
                 Text(
                   "ABESEC Campus Active",
-                  style: GoogleFonts.comfortaa(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF10B981),
@@ -501,7 +501,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                 children: [
                   Text(
                     "SELECTED DEFECT TELEMETRY",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
@@ -516,7 +516,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
 
                   Text(
                     "LIVE DATABASE INCIDENTS (${_liveComplaints.length})",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
@@ -541,7 +541,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                       ),
                       child: Text(
                         "No open defects found in campus database. All systems normal.",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 12,
                           color: isDark ? Colors.white60 : const Color(0xFF64748B),
                         ),
@@ -595,7 +595,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                                     children: [
                                       Text(
                                         inc.rawText.isNotEmpty ? inc.rawText : inc.department,
-                                        style: GoogleFonts.comfortaa(
+                                        style: GoogleFonts.plusJakartaSans(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w700,
                                           color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -605,7 +605,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                                       ),
                                       Text(
                                         "${inc.campusZone.isNotEmpty ? inc.campusZone : 'Campus'} • ${inc.crowdReportCount} Verified",
-                                        style: GoogleFonts.comfortaa(
+                                        style: GoogleFonts.plusJakartaSans(
                                           fontSize: 10.5,
                                           color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                                         ),
@@ -621,7 +621,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                                   ),
                                   child: Text(
                                     "SEV ${inc.initialSeverity}",
-                                    style: GoogleFonts.comfortaa(
+                                    style: GoogleFonts.plusJakartaSans(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.w800,
                                       color: deptColor,
@@ -660,7 +660,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
             const SizedBox(height: 14),
             Text(
               "All Clear! No Open Incidents",
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -669,7 +669,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
             const SizedBox(height: 6),
             Text(
               "No civic hazards reported in the campus database.",
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 color: isDark ? Colors.white60 : const Color(0xFF64748B),
               ),
@@ -704,7 +704,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
             ),
             title: Text(
               inc.rawText.isNotEmpty ? inc.rawText : inc.department,
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w800,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -716,7 +716,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                 const SizedBox(height: 4),
                 Text(
                   "${inc.campusZone.isNotEmpty ? inc.campusZone : 'Main Campus'} • Status: ${inc.status}",
-                  style: GoogleFonts.comfortaa(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                   ),
@@ -724,7 +724,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                 const SizedBox(height: 2),
                 Text(
                   "${inc.crowdReportCount} Students Verified • Priority: ${inc.computedPriority.toStringAsFixed(1)}",
-                  style: GoogleFonts.comfortaa(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF10B981),
@@ -747,7 +747,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
               ),
               child: Text(
                 _upvotedIncidentIds.contains(inc.id) ? "Upvoted" : "👍 Upvote",
-                style: GoogleFonts.comfortaa(fontSize: 11, fontWeight: FontWeight.w700),
+                style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -867,7 +867,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                 children: [
                   Text(
                     "Campus Radar Clear",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -876,7 +876,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                   const SizedBox(height: 2),
                   Text(
                     "No active infrastructure hazards in database. Tap (+) to report.",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                     ),
@@ -950,7 +950,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                   children: [
                     Text(
                       defect.rawText.isNotEmpty ? defect.rawText : "${defect.department} Defect",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w800,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -961,7 +961,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                     const SizedBox(height: 2),
                     Text(
                       "${defect.crowdReportCount} Students Verified • Urgency ${defect.computedPriority.toStringAsFixed(1)}",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF10B981),
@@ -978,7 +978,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                           ),
                           child: Text(
                             defect.department,
-                            style: GoogleFonts.comfortaa(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 9.5,
                               fontWeight: FontWeight.w700,
                               color: deptColor,
@@ -988,7 +988,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                         const SizedBox(width: 8),
                         Text(
                           defect.campusZone.isNotEmpty ? defect.campusZone : "ABESEC Campus",
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                             color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
@@ -1027,7 +1027,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                   ),
                   child: Text(
                     "View Details",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                     ),
@@ -1048,7 +1048,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
                   ),
                   label: Text(
                     hasUpvoted ? "Upvoted" : "👍 Upvote",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                       color: hasUpvoted ? Colors.white : (isDark ? Colors.white : const Color(0xFF0F172A)),
@@ -1139,7 +1139,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
             const SizedBox(width: 6),
             Text(
               label,
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -1179,7 +1179,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
             child: Center(
               child: Text(
                 "3D",
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   color: _is3DMode ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF0F172A)),
@@ -1282,7 +1282,7 @@ class _HeroHomeScreenState extends State<HeroHomeScreen> {
         ),
         child: Text(
           label,
-          style: GoogleFonts.comfortaa(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
             color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF64748B)),

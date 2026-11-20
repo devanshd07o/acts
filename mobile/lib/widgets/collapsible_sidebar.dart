@@ -20,7 +20,7 @@ class CollapsibleSidebar extends StatefulWidget {
 }
 
 class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
-  // Default: Collapsed (toggled ONLY via manual click button - NO auto hover)
+  // Default: Collapsed (toggled ONLY via manual click button)
   bool _isExpanded = false;
 
   @override
@@ -38,23 +38,23 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
         final photoUrl = auth.photoUrl;
 
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 220),
           curve: Curves.easeInOutCubic,
-          width: _isExpanded ? 248 : 68,
+          width: _isExpanded ? 256 : 72,
           margin: const EdgeInsets.fromLTRB(16, 12, 8, 16),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF141A26) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE2E8F0),
-              width: 1.2,
+              color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+              width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -62,97 +62,109 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 1. Top Header Row: Brand Icon + Manual Toggle (<< / >>)
-              Row(
-                mainAxisAlignment:
-                    _isExpanded ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
-                children: [
-                  if (_isExpanded) ...[
-                    Row(
-                      children: [
-                        Image.asset(
-                          'assets/icons/acts_logo.png',
-                          width: 26,
-                          height: 26,
-                          fit: BoxFit.contain,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Row(
+                  mainAxisAlignment:
+                      _isExpanded ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
+                  children: [
+                    if (_isExpanded) ...[
+                      Row(
+                        children: [
+                          Image.asset(
+                            'assets/icons/acts_logo.png',
+                            width: 28,
+                            height: 28,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(width: 8),
+                          Image.asset(
+                            isDark
+                                ? 'assets/images/acts_text_logo_dark.png'
+                                : 'assets/images/acts_text_logo.png',
+                            height: 20,
+                            fit: BoxFit.contain,
+                          ),
+                        ],
+                      ),
+                    ],
+                    SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: IconButton(
+                        icon: Icon(
+                          _isExpanded
+                              ? Icons.keyboard_double_arrow_left_rounded
+                              : Icons.keyboard_double_arrow_right_rounded,
+                          size: 20,
+                          color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
                         ),
-                        const SizedBox(width: 8),
-                        Image.asset(
-                          isDark
-                              ? 'assets/images/acts_text_logo_dark.png'
-                              : 'assets/images/acts_text_logo.png',
-                          height: 18,
-                          fit: BoxFit.contain,
-                        ),
-                      ],
+                        onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                        tooltip: _isExpanded ? "Collapse Sidebar" : "Expand Sidebar",
+                      ),
                     ),
                   ],
-                  IconButton(
-                    icon: Icon(
-                      _isExpanded
-                          ? Icons.keyboard_double_arrow_left_rounded
-                          : Icons.keyboard_double_arrow_right_rounded,
-                      size: 20,
-                      color: isDark ? Colors.white70 : const Color(0xFF475569),
-                    ),
-                    onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                    tooltip: _isExpanded ? "Collapse Sidebar" : "Expand Sidebar",
-                  ),
-                ],
+                ),
               ),
 
               const SizedBox(height: 12),
               Divider(
-                color: isDark ? const Color(0xFF1E2638) : const Color(0xFFE5E7EB),
+                color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
                 height: 1,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
               // 2. Navigation Items from Top:
               // Item 1: Home
               _buildNavItem(
                 index: 0,
-                icon: Icons.home_rounded,
-                label: "Home",
+                icon: Icons.dashboard_outlined,
+                activeIcon: Icons.dashboard_rounded,
+                label: "Campus Radar",
                 isDark: isDark,
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
-              // Item 2: + New Query (Prominent Orange)
+              // Item 2: + New Query (Defect Dispatch)
               _buildNavItem(
                 index: 1,
-                icon: Icons.add_circle_rounded,
-                label: "New Query",
+                icon: Icons.add_circle_outline_rounded,
+                activeIcon: Icons.add_circle_rounded,
+                label: "Report Defect",
                 isSpecial: true,
                 isDark: isDark,
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
               // Item 3: Current Active User Reports (My Reports)
               _buildNavItem(
                 index: 4,
                 icon: Icons.assignment_outlined,
-                label: "My Active Reports",
+                activeIcon: Icons.assignment_rounded,
+                label: "Active Reports",
                 isDark: isDark,
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
               // Item 4: 3D Campus Twin
               _buildNavItem(
                 index: 2,
-                icon: Icons.view_in_ar_rounded,
+                icon: Icons.view_in_ar_outlined,
+                activeIcon: Icons.view_in_ar_rounded,
                 label: "3D Campus Twin",
                 isDark: isDark,
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
               // Item 5: Incident Triage Feed
               _buildNavItem(
                 index: 3,
-                icon: Icons.format_list_bulleted_rounded,
+                icon: Icons.ballot_outlined,
+                activeIcon: Icons.ballot_rounded,
                 label: "Incident Triage",
                 isDark: isDark,
               ),
@@ -161,7 +173,7 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
 
               // 3. User Info (Name, Gmail, DP, Logout) at the BOTTOM
               Divider(
-                color: isDark ? const Color(0xFF1E2638) : const Color(0xFFE5E7EB),
+                color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
                 height: 1,
               ),
               const SizedBox(height: 12),
@@ -183,6 +195,7 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
   Widget _buildNavItem({
     required int index,
     required IconData icon,
+    required IconData activeIcon,
     required String label,
     required bool isDark,
     bool isSpecial = false,
@@ -200,29 +213,32 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
             widget.onIndexSelected(index);
           }
         },
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
+          constraints: const BoxConstraints(minHeight: 44),
           padding: EdgeInsets.symmetric(
             horizontal: _isExpanded ? 12 : 0,
-            vertical: 11,
+            vertical: 10,
           ),
           decoration: BoxDecoration(
             color: isSpecial
-                ? const Color(0xFFF97316).withValues(alpha: isDark ? 0.16 : 0.12)
+                ? (isDark
+                    ? AppTheme.abesNavyLight.withValues(alpha: 0.25)
+                    : const Color(0xFFEFF6FF))
                 : (isSelected
                     ? (isDark
-                        ? const Color(0xFF2563EB).withValues(alpha: 0.18)
-                        : const Color(0xFFEFF6FF))
+                        ? AppTheme.primaryBlue.withValues(alpha: 0.16)
+                        : const Color(0xFFF1F5F9))
                     : Colors.transparent),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSpecial
-                  ? const Color(0xFFF97316).withValues(alpha: 0.35)
+                  ? (isDark ? AppTheme.accentBlue : AppTheme.primaryBlue).withValues(alpha: 0.4)
                   : (isSelected
-                      ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                      ? (isDark ? AppTheme.accentBlue : AppTheme.primaryBlue).withValues(alpha: 0.35)
                       : Colors.transparent),
-              width: 1.2,
+              width: 1.0,
             ),
           ),
           child: Row(
@@ -230,27 +246,28 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
                 _isExpanded ? MainAxisAlignment.start : MainAxisAlignment.center,
             children: [
               Icon(
-                icon,
+                isSelected ? activeIcon : icon,
                 size: 20,
                 color: isSpecial
-                    ? const Color(0xFFF97316)
+                    ? (isDark ? AppTheme.accentBlue : AppTheme.primaryBlue)
                     : (isSelected
-                        ? const Color(0xFF2563EB)
-                        : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569))),
+                        ? (isDark ? AppTheme.accentBlue : AppTheme.primaryBlue)
+                        : (isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted)),
               ),
               if (_isExpanded) ...[
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     label,
-                    style: GoogleFonts.comfortaa(
-                      fontSize: 12.5,
-                      fontWeight: isSelected || isSpecial ? FontWeight.w800 : FontWeight.w600,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: isSelected || isSpecial ? FontWeight.w700 : FontWeight.w500,
+                      height: 1.25,
                       color: isSpecial
-                          ? const Color(0xFFF97316)
+                          ? (isDark ? AppTheme.darkText : AppTheme.abesNavy)
                           : (isSelected
-                              ? (isDark ? Colors.white : const Color(0xFF1D4ED8))
-                              : (isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B))),
+                              ? (isDark ? AppTheme.darkText : AppTheme.abesNavy)
+                              : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -278,20 +295,24 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
           Tooltip(
             message: "$displayName\n$email",
             child: _buildAvatar(
-              radius: 17,
+              radius: 18,
               photoUrl: photoUrl,
               name: displayName,
             ),
           ),
-          const SizedBox(height: 8),
-          IconButton(
-            tooltip: "Logout",
-            icon: Icon(
-              Icons.logout_rounded,
-              size: 18,
-              color: isDark ? Colors.white60 : const Color(0xFF64748B),
+          const SizedBox(height: 6),
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: IconButton(
+              tooltip: "Logout",
+              icon: Icon(
+                Icons.logout_rounded,
+                size: 18,
+                color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+              ),
+              onPressed: () => _handleLogout(context),
             ),
-            onPressed: () => _handleLogout(context),
           ),
         ],
       );
@@ -301,10 +322,11 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF182030) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? AppTheme.darkSurfaceElevated : AppTheme.lightSurfaceElevated,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? const Color(0xFF263249) : const Color(0xFFE2E8F0),
+          color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+          width: 1.0,
         ),
       ),
       child: Column(
@@ -313,7 +335,7 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
           Row(
             children: [
               _buildAvatar(
-                radius: 19,
+                radius: 18,
                 photoUrl: photoUrl,
                 name: displayName,
               ),
@@ -324,10 +346,11 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
                   children: [
                     Text(
                       displayName,
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                        color: isDark ? AppTheme.darkText : AppTheme.lightText,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -335,10 +358,11 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
                     const SizedBox(height: 2),
                     Text(
                       email,
-                      style: GoogleFonts.comfortaa(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? const Color(0xFF8A94A6) : AppTheme.textMutedLight,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w500,
+                        height: 1.2,
+                        color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -351,14 +375,16 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
           const SizedBox(height: 10),
           InkWell(
             onTap: () => _handleLogout(context),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 7),
+              constraints: const BoxConstraints(minHeight: 36),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: AppTheme.signalVermilion.withValues(alpha: isDark ? 0.12 : 0.08),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: const Color(0xFFEF4444).withValues(alpha: 0.25),
+                  color: AppTheme.signalVermilion.withValues(alpha: 0.25),
+                  width: 1.0,
                 ),
               ),
               child: Row(
@@ -367,15 +393,16 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
                   const Icon(
                     Icons.logout_rounded,
                     size: 15,
-                    color: Color(0xFFEF4444),
+                    color: AppTheme.signalVermilion,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     "Logout",
-                    style: GoogleFonts.comfortaa(
-                      fontSize: 11,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFEF4444),
+                      height: 1.2,
+                      color: AppTheme.signalVermilion,
                     ),
                   ),
                 ],
@@ -401,7 +428,7 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
         height: diameter,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFF97316), width: 1.5),
+          border: Border.all(color: AppTheme.primaryBlue, width: 1.5),
         ),
         child: ClipOval(
           child: Image.network(
@@ -424,17 +451,13 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar> {
       height: diameter,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [Color(0xFFF97316), Color(0xFFEA580C)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.abesNavyLight,
       ),
       alignment: Alignment.center,
       child: Text(
         initial,
         style: TextStyle(
-          fontSize: diameter * 0.45,
+          fontSize: diameter * 0.44,
           fontWeight: FontWeight.w800,
           color: Colors.white,
         ),

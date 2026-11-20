@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
 import '../../config/api_constants.dart';
 import '../../models/complaint_model.dart';
@@ -478,10 +479,10 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
 
           final complaint = snapshot.data ?? _generateFallbackDetail(widget.complaintId);
           final isDark = Theme.of(context).brightness == Brightness.dark;
-          final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
-          final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-          final tagBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
-          final tagBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+          final textPrimary = isDark ? AppTheme.darkText : AppTheme.lightText;
+          final textMuted = isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted;
+          final tagBg = isDark ? AppTheme.darkSurfaceElevated : AppTheme.lightSurfaceElevated;
+          final tagBorder = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
           final gemini = complaint.geminiAnalysis;
           final imgUrl = _resolveImageUrl(complaint.imageUrl);
@@ -530,13 +531,13 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                               decoration: BoxDecoration(
                                 color: tagBg,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: tagBorder),
+                                border: Border.all(color: tagBorder, width: 1.0),
                               ),
                               child: Text(
                                 complaint.department,
-                                style: TextStyle(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
                                   color: textPrimary,
                                 ),
                               ),
@@ -545,21 +546,31 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                         ),
                         if (complaint.crowdReportCount > 1)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+                              color: AppTheme.abesNavyLight.withValues(alpha: isDark ? 0.2 : 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                                color: AppTheme.abesNavyLight.withValues(alpha: 0.3),
+                                width: 1.0,
                               ),
                             ),
-                            child: Text(
-                              '👥 Crowd Boost: ${complaint.crowdReportCount} merged reports',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF8B5CF6),
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.people_alt_rounded, size: 13, color: AppTheme.primaryBlue),
+                                const SizedBox(width: 5),
+                                Text(
+                                  '${complaint.crowdReportCount} Merged Reports',
+                                  style: AppTheme.tabular(
+                                    GoogleFonts.plusJakartaSans(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.primaryBlue,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                       ],
@@ -568,6 +579,11 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
 
                     // Reporter Description Card
                     Card(
+                      color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: tagBorder, width: 1.0),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(18),
                         child: Column(
@@ -575,8 +591,8 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                           children: [
                             Text(
                               'Reporter Description',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w700,
                                 fontSize: 14,
                                 color: textPrimary,
                               ),
@@ -584,7 +600,11 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                             const SizedBox(height: 8),
                             Text(
                               complaint.rawText,
-                              style: TextStyle(fontSize: 14, color: textPrimary),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13.5,
+                                height: 1.45,
+                                color: textPrimary,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Row(
@@ -595,12 +615,14 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                                   complaint.campusZone.isNotEmpty
                                       ? complaint.campusZone
                                       : 'Main Campus',
-                                  style: TextStyle(color: textMuted, fontSize: 12),
+                                  style: GoogleFonts.plusJakartaSans(color: textMuted, fontSize: 12),
                                 ),
                                 const Spacer(),
                                 Text(
                                   'GPS: ${complaint.latitude.toStringAsFixed(4)}, ${complaint.longitude.toStringAsFixed(4)}',
-                                  style: TextStyle(color: textMuted, fontSize: 11),
+                                  style: AppTheme.tabular(
+                                    GoogleFonts.plusJakartaSans(color: textMuted, fontSize: 11),
+                                  ),
                                 ),
                               ],
                             ),
@@ -1152,30 +1174,36 @@ class _AdminActionPanelState extends State<_AdminActionPanel> {
             // ── 1. Priority Override ──────────────────────────────
             Text(
               '1. Priority Override',
-              style: TextStyle(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                letterSpacing: 0.8,
+                fontWeight: FontWeight.w700,
+                color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+                letterSpacing: 0.6,
               ),
             ),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Urgency Rating:', style: TextStyle(fontWeight: FontWeight.w600)),
+                Text(
+                  'Urgency Rating:',
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 13.5),
+                ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: _priorityColor(_priority).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _priorityColor(_priority).withValues(alpha: 0.3), width: 1.0),
                   ),
                   child: Text(
-                    '${_priority.toStringAsFixed(1)} / 10',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: _priorityColor(_priority),
+                    '${_priority.toStringAsFixed(1)} / 10.0',
+                    style: AppTheme.tabular(
+                      GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        color: _priorityColor(_priority),
+                      ),
                     ),
                   ),
                 ),
@@ -1199,23 +1227,28 @@ class _AdminActionPanelState extends State<_AdminActionPanel> {
                 return GestureDetector(
                   onTap: () => setState(() => _priority = p.toDouble()),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    constraints: const BoxConstraints(minHeight: 36),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: isActive
                           ? _priorityColor(p.toDouble()).withValues(alpha: 0.18)
-                          : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                          : (isDark ? AppTheme.darkSurfaceElevated : AppTheme.lightSurfaceElevated),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isActive
                             ? _priorityColor(p.toDouble())
-                            : (isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0)),
+                            : (isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                        width: 1.0,
                       ),
                     ),
                     child: Text(
-                      '$p',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isActive ? _priorityColor(p.toDouble()) : null,
+                      'P$p',
+                      style: AppTheme.tabular(
+                        GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                          color: isActive ? _priorityColor(p.toDouble()) : (isDark ? AppTheme.darkText : AppTheme.lightTextSecondary),
+                        ),
                       ),
                     ),
                   ),
@@ -1336,23 +1369,26 @@ class _AdminActionPanelState extends State<_AdminActionPanel> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                border: Border.all(
+                  color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+                  width: 1.0,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.groups_rounded, size: 20, color: Color(0xFF3B82F6)),
+                      const Icon(Icons.groups_rounded, size: 20, color: AppTheme.primaryBlue),
                       const SizedBox(width: 8),
                       Text(
                         '5. Tri-Party Resolution Committee',
-                        style: TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? AppTheme.darkText : AppTheme.lightText,
                         ),
                       ),
                     ],
@@ -1360,13 +1396,19 @@ class _AdminActionPanelState extends State<_AdminActionPanel> {
                   const SizedBox(height: 12),
                   Text(
                     'Faculty Supervisor / Teacher Mentor',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _facultyCtrl,
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'e.g. Dr. A. K. Sharma (HoD / Proctor)',
+                      hintStyle: GoogleFonts.plusJakartaSans(fontSize: 12.5),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     ),
@@ -1374,13 +1416,19 @@ class _AdminActionPanelState extends State<_AdminActionPanel> {
                   const SizedBox(height: 12),
                   Text(
                     'Student Lead / Council Observer',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _studentLeadCtrl,
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'e.g. Rahul Verma (Hostel Rep / CR)',
+                      hintStyle: GoogleFonts.plusJakartaSans(fontSize: 12.5),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     ),
@@ -1388,14 +1436,20 @@ class _AdminActionPanelState extends State<_AdminActionPanel> {
                   const SizedBox(height: 12),
                   Text(
                     'Committee Directives & Oversight Notes',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _committeeNotesCtrl,
                     maxLines: 2,
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'Specific verification directives before student closeout...',
+                      hintStyle: GoogleFonts.plusJakartaSans(fontSize: 12.5),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     ),

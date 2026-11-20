@@ -80,7 +80,7 @@ export default function CampusLabels({ clusters, cameraRef, rendererRef, sceneRe
             {/* Heat badge */}
             {label.count > 0 && (
               <div
-                className="flex items-center justify-center mx-auto w-6 h-6 rounded-full text-white text-[10px] font-bold shadow-md"
+                className="flex items-center justify-center mx-auto w-6 h-6 rounded-full text-white text-[10px] font-bold shadow-md tabular-nums"
                 style={{
                   background: label.heat?.color || label.accentColor,
                   boxShadow: `0 0 10px ${label.heat?.color || label.accentColor}88`

@@ -2,15 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #eceff1;
-  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
+@layer base {
+  :root {
+    /* Executive Command Center Dark Theme - Razor-Sharp Institutional Contrast */
+    --bg-canvas: #090d16;
+    --bg-surface: #0e1526;
+    --bg-card: #121c32;
+    --bg-card-hover: #17243f;
+    --bg-subtle: #1a2744;
+    --bg-muted: #243456;
+
+    --border-subtle: rgba(148, 163, 184, 0.14);
+    --border-medium: rgba(148, 163, 184, 0.25);
+    --border-strong: rgba(148, 163, 184, 0.40);
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --text-inverse: #090d16;
+
+    --accent-primary: #0284c7;
+    --accent-hover: #0369a1;
+    --accent-surface: rgba(2, 132, 199, 0.12);
+    --accent-border: rgba(2, 132, 199, 0.28);
+
+    --critical: #ef4444;
+    --critical-surface: rgba(239, 68, 68, 0.12);
+    --critical-border: rgba(239, 68, 68, 0.28);
+    --critical-text: #fca5a5;
+
+    --warning: #f59e0b;
+    --warning-surface: rgba(245, 158, 11, 0.12);
+    --warning-border: rgba(245, 158, 11, 0.28);
+    --warning-text: #fcd34d;
+
+    --success: #10b981;
+    --success-surface: rgba(16, 185, 129, 0.12);
+    --success-border: rgba(16, 185, 129, 0.28);
+    --success-text: #6ee7b7;
+
+    --info: #38bdf8;
+    --info-surface: rgba(56, 189, 248, 0.12);
+    --info-border: rgba(56, 189, 248, 0.28);
+    --info-text: #7dd3fc;
+  }
+
+  html, body {
+    overflow-x: clip;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Prevent mobile input zoom traps */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  @media (min-width: 640px) {
+    input, select, textarea {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Headings with balanced text-wrap & unitless line heights */
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    line-height: 1.55;
+  }
 }
 
-/* Custom map background styles */
+/* Tabular figures for numbers, timers, ticket IDs, priority scores */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Strict Anti-AI Slop Transition Rules - Animate ONLY transform & opacity within 150-250ms */
+.interactive-hover {
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.color-transition {
+  transition-property: background-color, border-color, color;
+  transition-timing-function: ease-out;
+  transition-duration: 150ms;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+/* Custom map pattern */
 .map-bg-pattern {
-  background-color: #e5e3df;
-  background-image: linear-gradient(#d7d5d1 2px, transparent 2px), linear-gradient(90deg, #d7d5d1 2px, transparent 2px);
-  background-size: 40px 40px;
+  background-color: #0b1120;
+  background-image: linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../config/theme.dart';
 import '../config/app_routes.dart';
 import '../services/auth_service.dart';
@@ -322,12 +323,16 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
             borderRadius: BorderRadius.circular(12),
             onTap: () => DesktopScaffold.isSidebarExpanded.value = true,
             child: Container(
-              padding: const EdgeInsets.all(8),
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2563EB), Color(0xFF7C3AED)],
-                ),
+                color: AppTheme.abesNavyLight,
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppTheme.accentBlue.withValues(alpha: 0.35),
+                  width: 1.0,
+                ),
               ),
               child: const Icon(Icons.shield_rounded, color: Colors.white, size: 22),
             ),
@@ -338,25 +343,22 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
 
     return Container(
       height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2563EB), Color(0xFF7C3AED)],
-              ),
+              color: AppTheme.abesNavyLight,
               borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
+              border: Border.all(
+                color: AppTheme.accentBlue.withValues(alpha: 0.35),
+                width: 1.0,
+              ),
             ),
-            child: const Icon(Icons.shield_rounded, color: Colors.white, size: 22),
+            child: const Icon(Icons.shield_rounded, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -366,19 +368,21 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
               children: [
                 Text(
                   'ACTS',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.1,
+                  style: GoogleFonts.plusJakartaSans(
+                    color: isDark ? AppTheme.darkText : AppTheme.lightText,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    height: 1.2,
                   ),
                 ),
                 Text(
-                  'Civic Triage Engine',
-                  style: TextStyle(
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  'Autonomous Civic Triage',
+                  style: GoogleFonts.plusJakartaSans(
+                    color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
                     fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
                   ),
                 ),
               ],
@@ -387,7 +391,7 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
           IconButton(
             icon: Icon(
               Icons.chevron_left_rounded,
-              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
               size: 20,
             ),
             tooltip: 'Collapse Sidebar',
@@ -592,7 +596,7 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
     ];
   }
 
-  // Rounded Pill Navigation Item (Modern Luxury Style)
+  // Navigation Item (Crisp 1px Border & 44px min touch target)
   Widget _navPillItem({
     required BuildContext context,
     required IconData icon,
@@ -602,30 +606,24 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
     required bool isExpanded,
     required bool isDark,
   }) {
-    Color bg;
-    Color fg;
-
-    if (isActive) {
-      bg = const Color(0xFF2563EB);
-      fg = Colors.white;
-    } else {
-      bg = Colors.transparent;
-      fg = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
-    }
+    final Color bg = isActive
+        ? (isDark ? AppTheme.accentBlue.withValues(alpha: 0.18) : const Color(0xFFEFF6FF))
+        : Colors.transparent;
+    final Color fg = isActive
+        ? (isDark ? AppTheme.accentBlue : AppTheme.primaryBlue)
+        : (isDark ? AppTheme.darkTextMuted : AppTheme.lightTextSecondary);
 
     return Container(
+      constraints: const BoxConstraints(minHeight: 44),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(16), // Rounded Pill shape
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ]
-            : null,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isActive
+              ? (isDark ? AppTheme.accentBlue : AppTheme.primaryBlue).withValues(alpha: 0.4)
+              : Colors.transparent,
+          width: 1.0,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -635,11 +633,11 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
               Navigator.pushReplacementNamed(context, route);
             }
           },
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isExpanded ? 16 : 0,
-              vertical: 13,
+              horizontal: isExpanded ? 14 : 0,
+              vertical: 10,
             ),
             child: isExpanded
                 ? Row(
@@ -649,17 +647,18 @@ class _DesktopScaffoldState extends State<DesktopScaffold> {
                       Expanded(
                         child: Text(
                           label,
-                          style: TextStyle(
+                          style: GoogleFonts.plusJakartaSans(
                             color: fg,
-                            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                            fontSize: 13.5,
+                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                            fontSize: 13,
+                            height: 1.25,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   )
-                : Center(child: Icon(icon, color: fg, size: 22)),
+                : Center(child: Icon(icon, color: fg, size: 20)),
           ),
         ),
       ),

@@ -1,71 +1,69 @@
 import React from 'react';
-import { CATEGORIES } from '../data/abes3DData';
-import { Filter, Flame, Compass, BellRing, Sparkles } from 'lucide-react';
+import { Filter } from 'lucide-react';
+import { CATEGORIES, CATEGORY_LABELS } from '../data/campusData';
 import { soundFx } from '../utils/soundFx';
 
 export default function FloatingControls({
-  selectedCategory,
-  onSelectCategory,
-  onFocusBlock,
-  recentActivity
+  activeFilter = 'All',
+  onSelectFilter
 }) {
+  const heatTiers = [
+    { label: '1–2 Low', color: '#0284c7', count: 'Normal' },
+    { label: '3–4 Med', color: '#d97706', count: 'Elevated' },
+    { label: '5+ High', color: '#dc2626', count: 'Critical' }
+  ];
+
   return (
-    <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 z-30 flex flex-col md:flex-row items-center justify-between gap-2 sm:gap-3 pointer-events-none">
-      {/* Category Filter Pills */}
-      <div className="glass-panel p-1.5 sm:p-2 rounded-2xl flex items-center gap-1.5 overflow-x-auto max-w-full pointer-events-auto shadow-2xl">
-        <div className="flex items-center gap-1 px-2 text-slate-400 text-xs font-bold shrink-0">
-          <Filter className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="hidden sm:inline">Filter:</span>
+    <div className="absolute bottom-2 sm:bottom-4 left-0 right-0 z-20 px-2 sm:px-6 pointer-events-none">
+      <div className="glass-panel rounded-2xl px-2.5 sm:px-3 py-2 flex items-center justify-between gap-2 sm:gap-3 max-w-5xl mx-auto pointer-events-auto shadow-lg border border-slate-200/80">
+        {/* Category Filters Pill Scroller with touch targets >= 44px */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-1 min-w-0">
+          <div className="flex items-center gap-1 text-slate-400 text-xs font-bold px-1 shrink-0">
+            <Filter className="w-3.5 h-3.5 text-slate-500" />
+            <span className="hidden sm:inline">Filter:</span>
+          </div>
+
+          {CATEGORIES.map((cat) => {
+            const isActive = activeFilter === cat;
+            const label = CATEGORY_LABELS[cat] || cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => {
+                  soundFx.playClick();
+                  onSelectFilter?.(cat);
+                }}
+                className={`nav-pill min-h-[44px] text-xs font-semibold px-3 py-2 shrink-0 transition-transform duration-150 active:scale-95 cursor-pointer ${
+                  isActive
+                    ? 'bg-sky-600 text-white shadow-xs font-bold'
+                    : 'bg-white/90 text-slate-700 hover:bg-slate-100 border border-slate-200/80'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
-        {CATEGORIES.map((cat) => {
-          const isActive = selectedCategory === cat;
-          return (
-            <button
-              key={cat}
-              onClick={() => {
-                soundFx.playClick();
-                onSelectCategory(cat);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
-                isActive
-                  ? 'bg-cyan-500 text-slate-950 font-black shadow-lg shadow-cyan-500/30'
-                  : 'bg-slate-800/60 text-slate-300 hover:bg-slate-700/80 hover:text-white'
-              }`}
-            >
-              {cat}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Heat Tier Legend & Live Merge Influx Toast */}
-      <div className="flex items-center gap-2 pointer-events-auto">
-        {/* Live Merge Toast */}
-        {recentActivity && (
-          <div className="glass-panel px-3.5 py-2 rounded-2xl flex items-center gap-2 text-xs text-slate-200 shadow-2xl border border-cyan-500/40 animate-in fade-in slide-in-from-bottom duration-300">
-            <BellRing className="w-4 h-4 text-cyan-400 animate-bounce" />
-            <span className="truncate max-w-[200px] sm:max-w-[300px]">
-              <strong className="text-cyan-400">Live Merge:</strong> {recentActivity.title}
-            </span>
-          </div>
-        )}
-
-        {/* 3D Pillar Heat Legend */}
-        <div className="hidden sm:flex items-center gap-3.5 glass-panel px-4 py-2 rounded-2xl text-[11px] font-bold text-slate-300 shadow-2xl">
-          <span className="text-slate-400">3D Heat Tier:</span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
-            <span>1-2 (Normal)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]"></span>
-            <span>3-4 (Elevated)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_12px_#f43f5e] animate-ping"></span>
-            <span className="text-rose-400 font-extrabold">5+ (Critical Beam)</span>
-          </div>
+        {/* Heat Legend */}
+        <div className="hidden md:flex items-center gap-3 shrink-0 pl-3 border-l border-slate-200/80 text-xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Heat Tier:
+          </span>
+          {heatTiers.map((t) => (
+            <div key={t.label} className="flex items-center gap-1.5">
+              <span
+                className="w-2.5 h-2.5 rounded-full animate-pulse shrink-0"
+                style={{ backgroundColor: t.color }}
+              />
+              <span
+                className="font-bold tabular-nums text-[11px]"
+                style={{ color: t.color }}
+              >
+                {t.label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

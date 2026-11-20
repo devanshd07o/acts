@@ -1,30 +1,26 @@
 import React, { useState } from 'react';
 import {
   Building2,
-  Flame,
-  Radio,
-  PlusCircle,
-  Video,
-  Sun,
-  Moon,
-  Volume2,
-  VolumeX,
-  Zap,
-  Activity,
+  AlertTriangle,
+  RotateCw,
   Compass,
-  RotateCw
+  Eye,
+  Plus,
+  RefreshCw,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
 
 export default function Navbar({
-  stats,
-  isSimulating,
-  onToggleSimulate,
-  onOpenReport,
-  cameraMode,
+  queries = [],
+  clusters = [],
+  cameraMode = 'orbit',
   onChangeCameraMode,
-  isNightMode,
-  onToggleNightMode
+  isSyncing = false,
+  lastSyncTime = 'just now',
+  onRefresh,
+  onOpenReport
 }) {
   const [isMuted, setIsMuted] = useState(false);
 
@@ -33,169 +29,162 @@ export default function Navbar({
     setIsMuted(!newState);
   };
 
+  const criticalClusters = clusters.filter(
+    (c) => c.heat?.tier === 'critical' || (c.totalQueries && c.totalQueries >= 5)
+  );
+
+  const camButtons = [
+    { id: 'orbit', label: '360° Orbit', icon: RotateCw },
+    { id: 'firstperson', label: '1st Person', icon: Eye },
+    { id: 'top', label: 'Bird View', icon: Compass }
+  ];
+
   return (
-    <header className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-4 z-30 flex flex-wrap items-center justify-between gap-2 sm:gap-3 pointer-events-none">
-      {/* Brand & Campus Identity */}
-      <div className="flex items-center gap-2.5 sm:gap-3 glass-panel px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl pointer-events-auto shadow-2xl">
-        <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-slate-950 font-black shadow-lg shadow-cyan-500/25">
-          <Activity className="w-5 h-5 text-white animate-pulse" />
-          <span className="absolute -bottom-1 -right-1 flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-          </span>
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <h1 className="text-xs sm:text-sm font-black tracking-tight text-white m-0">
-              ABESEC <span className="text-cyan-400">Campus 3D Pulse</span>
-            </h1>
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-cyan-950/90 border border-cyan-500/50 text-cyan-300">
-              3D Spatial Engine
+    <header className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-4 z-30 pointer-events-none">
+      <div className="glass-panel rounded-2xl px-2.5 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-3 pointer-events-auto">
+        {/* Brand & Campus Identity */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-600 text-white font-black text-xs shadow-sm">
+            <span>ACTS</span>
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
           </div>
-          <p className="text-[10px] sm:text-[11px] text-slate-400 m-0 hidden xs:block">
-            Architectural Spatial Clustering & Real-time Beacons
-          </p>
-        </div>
-      </div>
-
-      {/* Live Campus Telemetry Badges */}
-      <div className="hidden lg:flex items-center gap-2 glass-panel px-3.5 py-2 rounded-2xl pointer-events-auto shadow-2xl">
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <Radio className="w-3.5 h-3.5 text-cyan-400" />
-          <div className="flex flex-col">
-            <span className="text-[9px] text-slate-400 font-medium leading-none">Total Issues</span>
-            <span className="text-xs font-bold text-white">{stats.totalQueries} Queries</span>
+          <div className="hidden xs:block">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight leading-tight">
+                ABESEC Digital Twin
+              </span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 uppercase tracking-wide">
+                Live Twin
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-500 font-medium leading-tight">
+              Spatial Infrastructure & Civic Triage
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <Building2 className="w-3.5 h-3.5 text-amber-400" />
-          <div className="flex flex-col">
-            <span className="text-[9px] text-slate-400 font-medium leading-none">Active Beacons</span>
-            <span className="text-xs font-bold text-white">{stats.totalSpots} Blocks</span>
+        {/* Live Telemetry KPI Badges */}
+        <div className="hidden md:flex items-center gap-2">
+          {/* Active Reports */}
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse shrink-0" />
+            <span className="text-xs font-bold text-slate-900 tabular-nums">
+              {queries.length}
+            </span>
+            <span className="text-[11px] text-slate-500 font-medium hidden lg:inline">
+              Active Reports
+            </span>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-rose-950/40 border border-rose-500/40">
-          <Flame className="w-3.5 h-3.5 text-rose-400 animate-bounce" />
-          <div className="flex flex-col">
-            <span className="text-[9px] text-rose-300 font-medium leading-none">Critical Hotspots</span>
-            <span className="text-xs font-bold text-rose-400">{stats.criticalSpots} Beacons</span>
+          {/* Impacted Blocks */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <Building2 className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+            <span className="text-xs font-bold text-slate-900 tabular-nums">
+              {clusters.length}
+            </span>
+            <span className="text-[11px] text-slate-500 font-medium hidden lg:inline">
+              Impacted Blocks
+            </span>
           </div>
-        </div>
-      </div>
 
-      {/* Camera Modes & Controls */}
-      <div className="flex items-center gap-2 pointer-events-auto">
-        {/* 3D Camera Controls Dropdown / Toggle */}
-        <div className="glass-panel p-1 rounded-2xl flex items-center gap-1 shadow-xl">
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              onChangeCameraMode('isometric');
-            }}
-            title="3D Isometric View"
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
-              cameraMode === 'isometric'
-                ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/25'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Compass className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">3D View</span>
-          </button>
-
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              onChangeCameraMode(cameraMode === 'orbit' ? 'isometric' : 'orbit');
-            }}
-            title="Drone Orbit Camera"
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
-              cameraMode === 'orbit'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25 animate-pulse'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <RotateCw className={`w-3.5 h-3.5 ${cameraMode === 'orbit' ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">360° Orbit</span>
-          </button>
-
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              onChangeCameraMode('topDown');
-            }}
-            title="2D Top-Down Blueprint"
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
-              cameraMode === 'topDown'
-                ? 'bg-blue-500 text-slate-950 shadow-md shadow-blue-500/25'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <span className="text-[10px] font-mono">2D</span>
-          </button>
-        </div>
-
-        {/* Night / Day Lighting */}
-        <button
-          onClick={() => {
-            soundFx.playClick();
-            onToggleNightMode();
-          }}
-          title={isNightMode ? 'Switch to Day Light' : 'Switch to Cyber Night'}
-          className="glass-panel p-2.5 rounded-2xl text-slate-300 hover:text-white transition-all active:scale-95 shadow-lg"
-        >
-          {isNightMode ? (
-            <Moon className="w-4 h-4 text-cyan-400" />
-          ) : (
-            <Sun className="w-4 h-4 text-amber-400" />
+          {/* Critical Alerts */}
+          {criticalClusters.length > 0 && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-700">
+              <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+              <span className="text-xs font-bold tabular-nums">
+                {criticalClusters.length}
+              </span>
+              <span className="text-[11px] font-bold hidden lg:inline">
+                Critical Alert{criticalClusters.length > 1 ? 's' : ''}
+              </span>
+            </div>
           )}
-        </button>
+        </div>
 
-        {/* Sound Toggle */}
-        <button
-          onClick={toggleSound}
-          title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-          className="glass-panel p-2.5 rounded-2xl text-slate-300 hover:text-white transition-all active:scale-95 shadow-lg hidden sm:flex"
-        >
-          {isMuted ? (
-            <VolumeX className="w-4 h-4 text-rose-400" />
-          ) : (
-            <Volume2 className="w-4 h-4 text-emerald-400" />
-          )}
-        </button>
+        {/* Controls: Camera Mode Switcher + Audio + Sync + Report CTA (Touch Targets >= 44px) */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Camera View Switcher */}
+          <div className="flex items-center gap-0.5 p-1 rounded-xl bg-slate-100/90 border border-slate-200">
+            {camButtons.map((btn) => {
+              const IconComp = btn.icon;
+              const isActive = cameraMode === btn.id;
+              return (
+                <button
+                  key={btn.id}
+                  onClick={() => {
+                    soundFx.playClick();
+                    onChangeCameraMode?.(btn.id);
+                  }}
+                  className={`nav-pill min-h-[44px] min-w-[44px] sm:min-w-0 text-xs font-semibold px-2.5 sm:px-3 py-1.5 transition-transform duration-150 active:scale-95 flex items-center justify-center ${
+                    isActive
+                      ? 'bg-sky-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                  }`}
+                  title={btn.label}
+                  aria-label={btn.label}
+                >
+                  <IconComp className="w-4 h-4 shrink-0" />
+                  <span className="hidden lg:inline text-[11px] font-semibold ml-1">
+                    {btn.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-        {/* Simulate Live Influx */}
-        <button
-          onClick={() => {
-            soundFx.playClick();
-            onToggleSimulate();
-          }}
-          className={`glass-panel px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-lg ${
-            isSimulating
-              ? 'bg-amber-500/20 border-amber-500/60 text-amber-300 ring-2 ring-amber-500/30'
-              : 'hover:bg-slate-800 text-slate-300'
-          }`}
-        >
-          <Zap className={`w-4 h-4 ${isSimulating ? 'text-amber-400 animate-spin' : 'text-slate-400'}`} />
-          <span className="hidden md:inline">
-            {isSimulating ? 'Simulating Influx...' : 'Simulate Influx'}
-          </span>
-        </button>
+          {/* Sound Mute/Unmute >= 44px */}
+          <button
+            onClick={toggleSound}
+            title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+            aria-label={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+            className="w-11 h-11 rounded-xl text-slate-600 hover:text-slate-900 bg-slate-100/90 hover:bg-slate-200/90 border border-slate-200 hidden sm:flex items-center justify-center cursor-pointer transition-transform duration-150 active:scale-95"
+          >
+            {isMuted ? (
+              <VolumeX className="w-4 h-4 text-rose-500" />
+            ) : (
+              <Volume2 className="w-4 h-4 text-emerald-600" />
+            )}
+          </button>
 
-        {/* Log Campus Query CTA */}
-        <button
-          onClick={() => {
-            soundFx.playClick();
-            onOpenReport();
-          }}
-          className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-slate-950 font-black px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs flex items-center gap-1.5 shadow-xl shadow-cyan-500/30 active:scale-95 transition-all"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Log Query</span>
-        </button>
+          {/* Live Sync Poll Pill >= 44px */}
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              onRefresh?.();
+            }}
+            className={`nav-pill min-h-[44px] text-xs font-semibold px-3 py-1.5 border flex items-center justify-center gap-1.5 cursor-pointer transition-transform duration-150 active:scale-95 ${
+              isSyncing
+                ? 'bg-sky-50 text-sky-800 border-sky-300'
+                : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+            }`}
+            title="Refresh Live Civic Data Feed"
+          >
+            <RefreshCw
+              className={`w-4 h-4 shrink-0 ${
+                isSyncing ? 'animate-spin text-sky-600' : 'text-emerald-600'
+              }`}
+            />
+            <span className="hidden sm:inline font-medium">Sync</span>
+            <span className="text-[10px] text-emerald-700 font-mono tabular-nums hidden xl:inline">
+              ({lastSyncTime})
+            </span>
+          </button>
+
+          {/* Report Issue CTA >= 44px */}
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              onOpenReport?.();
+            }}
+            className="nav-pill min-h-[44px] bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-3.5 py-1.5 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-transform duration-150 active:scale-95"
+          >
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="hidden xs:inline">Report Issue</span>
+          </button>
+        </div>
       </div>
     </header>
   );

@@ -73,7 +73,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
           backgroundColor: const Color(0xFF10B981),
           content: Text(
             "Upvoted! Incident urgency escalated (verified count: $crowdCount).",
-            style: GoogleFonts.comfortaa(fontWeight: FontWeight.w600),
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
           ),
         ),
       );
@@ -84,7 +84,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: const Color(0xFFDC2626),
-            content: Text("Upvote failed: $e", style: GoogleFonts.comfortaa()),
+            content: Text("Upvote failed: $e", style: GoogleFonts.plusJakartaSans()),
           ),
         );
       }
@@ -320,18 +320,22 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
 
         // Top Tag
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFFF97316).withValues(alpha: 0.12),
+            color: (isDark ? AppTheme.accentBlue : AppTheme.primaryBlue).withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: (isDark ? AppTheme.accentBlue : AppTheme.primaryBlue).withValues(alpha: 0.25),
+              width: 1.0,
+            ),
           ),
           child: Text(
-            "ABES ENGINEERING COLLEGE • STUDENT CITIZEN PORTAL",
-            style: GoogleFonts.comfortaa(
-              fontSize: 10,
+            "ABES ENGINEERING COLLEGE • CIVIC TRIAGE RADAR",
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 10.5,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-              color: const Color(0xFFF97316),
+              letterSpacing: 0.6,
+              color: isDark ? AppTheme.accentBlue : AppTheme.primaryBlue,
             ),
           ),
         ),
@@ -340,22 +344,23 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
 
         Text(
           "Autonomous Civic Triage &\nInfrastructure Intelligence",
-          style: GoogleFonts.comfortaa(
-            fontSize: isDesktop ? 28 : 21,
-            fontWeight: FontWeight.w900,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: isDesktop ? 28 : 22,
+            fontWeight: FontWeight.w800,
             height: 1.2,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            letterSpacing: -0.5,
+            color: isDark ? AppTheme.darkText : AppTheme.lightText,
           ),
         ),
 
         const SizedBox(height: 12),
 
         Text(
-          "Detect road cracks, electrical conduits, and water leaks instantly with neural computer vision. Nearby reports automatically merge into crowd-weighted clusters with automated crew dispatch.",
-          style: GoogleFonts.comfortaa(
-            fontSize: isDesktop ? 13 : 12,
-            height: 1.6,
-            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+          "Detect road cracks, exposed wiring, and utility fractures instantly with neural computer vision. Nearby reports automatically merge into crowd-weighted clusters with automated crew dispatch.",
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: isDesktop ? 13.5 : 12.5,
+            height: 1.5,
+            color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
           ),
         ),
 
@@ -371,20 +376,21 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
               onPressed: () => setState(() => _activeNavIndex = 1),
               icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
               label: Text(
-                "Report New Issue / Query",
-                style: GoogleFonts.comfortaa(
+                "Report Campus Defect",
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
+                  letterSpacing: 0.2,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF97316),
+                backgroundColor: AppTheme.primaryBlue,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+                minimumSize: const Size(44, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
@@ -392,23 +398,24 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
             // Secondary Button: [ 🗺️ Launch 3D Campus Digital Twin ]
             OutlinedButton.icon(
               onPressed: () => setState(() => _activeNavIndex = 2),
-              icon: const Icon(Icons.view_in_ar_rounded, size: 18, color: Color(0xFF2563EB)),
+              icon: const Icon(Icons.view_in_ar_rounded, size: 18, color: AppTheme.primaryBlue),
               label: Text(
-                "Launch 3D Campus Twin",
-                style: GoogleFonts.comfortaa(
+                "Launch 3D Twin",
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+                  color: isDark ? AppTheme.darkText : AppTheme.abesNavy,
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+                minimumSize: const Size(44, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 side: BorderSide(
-                  color: isDark ? const Color(0xFF2E3A52) : const Color(0xFFCBD5E1),
-                  width: 1.2,
+                  color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+                  width: 1.0,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
@@ -419,7 +426,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
 
     final previewImage = Center(
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Image.asset(
           'assets/images/preview_radar.png',
           height: isDesktop ? 240 : 180,
@@ -427,34 +434,21 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
           errorBuilder: (_, __, ___) => const Icon(
             Icons.view_in_ar_rounded,
             size: 80,
-            color: Color(0xFFF97316),
+            color: AppTheme.primaryBlue,
           ),
         ),
       ),
     );
 
     return Container(
-      padding: EdgeInsets.all(isDesktop ? 30 : 20),
+      padding: EdgeInsets.all(isDesktop ? 28 : 18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [const Color(0xFF141A26), const Color(0xFF1B2436)]
-              : [Colors.white, const Color(0xFFF1F5F9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE2E8F0),
-          width: 1.2,
+          color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+          width: 1.0,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: isDesktop
           ? Row(
@@ -530,13 +524,13 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
     bool isDark,
   ) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF141A26) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE2E8F0),
-          width: 1.2,
+          color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+          width: 1.0,
         ),
       ),
       child: Column(
@@ -544,27 +538,30 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
         children: [
           Text(
             title,
-            style: GoogleFonts.comfortaa(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: isDark ? const Color(0xFF8A94A6) : AppTheme.textMutedLight,
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             value,
-            style: GoogleFonts.comfortaa(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: accent,
+            style: AppTheme.tabular(
+              GoogleFonts.plusJakartaSans(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: accent,
+                height: 1.15,
+              ),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: GoogleFonts.comfortaa(
-              fontSize: 10,
-              color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
             ),
           ),
         ],
@@ -576,23 +573,23 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
   Widget _buildPillarsShowcase(bool isDark, bool isDesktop) {
     final p1 = _buildPillarCard(
       step: "01",
-      title: "AI Defect Triage",
-      desc: "Point camera at any defect. Neural vision analyzes hazard severity and location coordinates.",
-      accent: const Color(0xFF2563EB),
+      title: "AI Defect Classification",
+      desc: "Computer vision scans defect pixels to verify hazards, estimate SLA urgency, and prevent false reports.",
+      accent: AppTheme.primaryBlue,
       isDark: isDark,
     );
     final p2 = _buildPillarCard(
       step: "02",
       title: "3D Campus Radar",
-      desc: "Spatial clustering aggregates reports from nearby students into a single actionable queue.",
-      accent: const Color(0xFFF97316),
+      desc: "Sub-60m spatial clustering merges duplicate reports from nearby students into high-priority action queues.",
+      accent: AppTheme.abesGold,
       isDark: isDark,
     );
     final p3 = _buildPillarCard(
       step: "03",
-      title: "Verified Resolution",
-      desc: "Direct crew dispatch with before & after photographic evidence to confirm repairs.",
-      accent: const Color(0xFF10B981),
+      title: "Verified Resolution Handshake",
+      desc: "Direct maintenance crew dispatch with mandatory before & after photo proof before ticket closure.",
+      accent: AppTheme.signalEmerald,
       isDark: isDark,
     );
 
@@ -627,12 +624,13 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
     required bool isDark,
   }) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF141A26) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE2E8F0),
+          color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+          width: 1.0,
         ),
       ),
       child: Column(
@@ -641,34 +639,38 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.12),
+              color: accent.withValues(alpha: isDark ? 0.2 : 0.1),
               borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: accent.withValues(alpha: 0.3), width: 1.0),
             ),
             child: Text(
               step,
-              style: GoogleFonts.comfortaa(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: accent,
+              style: AppTheme.tabular(
+                GoogleFonts.plusJakartaSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: accent,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 12),
           Text(
             title,
-            style: GoogleFonts.comfortaa(
-              fontSize: 14.5,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
               fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              height: 1.25,
+              color: isDark ? AppTheme.darkText : AppTheme.lightText,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             desc,
-            style: GoogleFonts.comfortaa(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 11.5,
-              height: 1.5,
-              color: isDark ? const Color(0xFF8A94A6) : AppTheme.textBodyLight,
+              height: 1.45,
+              color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
             ),
           ),
         ],
@@ -686,7 +688,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
           children: [
             Text(
               "LIVE DATABASE INCIDENTS (${_liveComplaints.length})",
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.1,
@@ -726,7 +728,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                   const SizedBox(height: 12),
                   Text(
                     "All Campus Pathways Clear",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -735,7 +737,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                   const SizedBox(height: 4),
                   Text(
                     "No unresolved hazards in the campus database. Tap 'Report New Issue' above to log a defect.",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 11.5,
                       color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                     ),
@@ -758,16 +760,18 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF141A26) : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
+                  color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE2E8F0),
+                    color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+                    width: 1.0,
                   ),
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: deptColor.withValues(alpha: 0.15),
+                      radius: 20,
+                      backgroundColor: deptColor.withValues(alpha: isDark ? 0.2 : 0.12),
                       child: Icon(_getDepartmentIcon(inc.department), color: deptColor, size: 20),
                     ),
                     const SizedBox(width: 14),
@@ -777,28 +781,53 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                         children: [
                           Text(
                             inc.rawText.isNotEmpty ? inc.rawText : inc.department,
-                            style: GoogleFonts.comfortaa(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              fontWeight: FontWeight.w700,
+                              height: 1.25,
+                              color: isDark ? AppTheme.darkText : AppTheme.lightText,
                             ),
                           ),
                           const SizedBox(height: 3),
                           Text(
                             "${inc.campusZone.isNotEmpty ? inc.campusZone : 'Main Campus'} • Status: ${inc.status}",
-                            style: GoogleFonts.comfortaa(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 11,
-                              color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
+                              color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            "${inc.crowdReportCount} Students Verified • Priority ${inc.computedPriority.toStringAsFixed(1)}",
-                            style: GoogleFonts.comfortaa(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF10B981),
-                            ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Text(
+                                "${inc.crowdReportCount} Verified",
+                                style: AppTheme.tabular(
+                                  GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.signalEmerald,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getSeverityColor(inc.computedPriority).withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  "Priority ${inc.computedPriority.toStringAsFixed(1)}",
+                                  style: AppTheme.tabular(
+                                    GoogleFonts.plusJakartaSans(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.getSeverityColor(inc.computedPriority),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -808,23 +837,32 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                       icon: Icon(
                         hasUpvoted ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
                         size: 15,
-                        color: hasUpvoted ? Colors.white : const Color(0xFFF97316),
+                        color: hasUpvoted ? Colors.white : AppTheme.primaryBlue,
                       ),
                       label: Text(
-                        hasUpvoted ? "Upvoted" : "Upvote",
-                        style: GoogleFonts.comfortaa(
+                        hasUpvoted ? "Upvoted" : "+1 Confirm",
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
-                          color: hasUpvoted ? Colors.white : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                          color: hasUpvoted ? Colors.white : (isDark ? AppTheme.darkText : AppTheme.abesNavy),
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: hasUpvoted
-                            ? const Color(0xFF10B981)
-                            : (isDark ? const Color(0xFF1D2433) : const Color(0xFFF1F5F9)),
+                            ? AppTheme.signalEmerald
+                            : (isDark ? AppTheme.darkSurfaceElevated : AppTheme.lightSurfaceElevated),
                         elevation: 0,
+                        minimumSize: const Size(44, 44),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: hasUpvoted
+                                ? AppTheme.signalEmerald
+                                : (isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                            width: 1.0,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -857,7 +895,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                 children: [
                   Text(
                     "Campus Incident Triage Queue",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -866,7 +904,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                   const SizedBox(height: 4),
                   Text(
                     "Real-time campus infrastructure reports validated via crowd algorithms",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 11.5,
                       color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                     ),
@@ -878,7 +916,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                 icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
                 label: Text(
                   "New Query",
-                  style: GoogleFonts.comfortaa(fontSize: 12, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF97316),
@@ -904,7 +942,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                     selected: isSelected,
                     selectedColor: const Color(0xFFF97316),
                     backgroundColor: isDark ? const Color(0xFF141A26) : Colors.white,
-                    labelStyle: GoogleFonts.comfortaa(
+                    labelStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                       color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
@@ -943,7 +981,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                     const SizedBox(height: 14),
                     Text(
                       "No Active Hazards in Triage Queue",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -952,7 +990,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                     const SizedBox(height: 6),
                     Text(
                       "All utility systems, road segments, and buildings are operational.",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                       ),
@@ -968,7 +1006,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                       ),
                       child: Text(
                         "Report a Defect",
-                        style: GoogleFonts.comfortaa(fontSize: 12, fontWeight: FontWeight.w700),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],
@@ -1009,7 +1047,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                           children: [
                             Text(
                               inc.rawText.isNotEmpty ? inc.rawText : inc.department,
-                              style: GoogleFonts.comfortaa(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
                                 color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -1018,7 +1056,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                             const SizedBox(height: 4),
                             Text(
                               "${inc.campusZone.isNotEmpty ? inc.campusZone : 'Main Campus'} • Status: ${inc.status}",
-                              style: GoogleFonts.comfortaa(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11,
                                 color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                               ),
@@ -1026,7 +1064,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                             const SizedBox(height: 2),
                             Text(
                               "${inc.crowdReportCount} Validations • Priority Level ${inc.computedPriority.toStringAsFixed(1)}",
-                              style: GoogleFonts.comfortaa(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w700,
                                 color: const Color(0xFF10B981),
@@ -1044,7 +1082,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                         ),
                         label: Text(
                           hasUpvoted ? "Upvoted" : "Upvote",
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: hasUpvoted ? Colors.white : (isDark ? Colors.white : const Color(0xFF0F172A)),
@@ -1094,7 +1132,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                 children: [
                   Text(
                     "My Active Reports",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -1103,7 +1141,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                   const SizedBox(height: 4),
                   Text(
                     "Track the real-time triage, crew dispatch, and resolution verification of your reports",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 11.5,
                       color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                     ),
@@ -1115,7 +1153,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                 icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
                 label: Text(
                   "New Query",
-                  style: GoogleFonts.comfortaa(fontSize: 12, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF97316),
@@ -1165,7 +1203,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                     const SizedBox(height: 16),
                     Text(
                       "No Reports Filed Yet",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -1175,7 +1213,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                     Text(
                       "You have not submitted any infrastructure defect reports yet.\nSpot a hazard on campus? Click below to dispatch an automated AI report.",
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         height: 1.5,
                         color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
@@ -1187,7 +1225,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                       icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
                       label: Text(
                         "File Your First Query",
-                        style: GoogleFonts.comfortaa(fontSize: 12.5, fontWeight: FontWeight.w700),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF97316),
@@ -1233,7 +1271,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                           children: [
                             Text(
                               inc.rawText.isNotEmpty ? inc.rawText : inc.department,
-                              style: GoogleFonts.comfortaa(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
                                 color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -1242,7 +1280,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                             const SizedBox(height: 4),
                             Text(
                               "${inc.campusZone.isNotEmpty ? inc.campusZone : 'Main Campus'} • Assigned: ${inc.assignedCrewName ?? 'Pending Squad'}",
-                              style: GoogleFonts.comfortaa(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11,
                                 color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                               ),
@@ -1259,7 +1297,7 @@ class _PortalHomeScreenState extends State<PortalHomeScreen> {
                         ),
                         child: Text(
                           inc.status,
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFF10B981),

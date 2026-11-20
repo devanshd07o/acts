@@ -14,7 +14,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   return (
     <RoleProvider>
-      <div className="min-h-[100dvh] w-full bg-[#eceff1] flex flex-col">
+      <div className="min-h-[100dvh] w-full bg-[var(--bg-canvas)] text-[var(--text-primary)] flex flex-col antialiased selection:bg-sky-500/20 selection:text-sky-200">
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />

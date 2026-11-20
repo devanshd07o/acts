@@ -95,7 +95,7 @@ class AppHeader extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     "Settings",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),

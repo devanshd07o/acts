@@ -489,7 +489,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               ),
               child: Text(
                 activeItem['tag'] as String,
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
@@ -505,7 +505,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               child: Text(
                 activeItem['title'] as String,
                 key: ValueKey('title_$_activeFeatureIndex'),
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 28,
                   height: 1.15,
                   fontWeight: FontWeight.w900,
@@ -521,7 +521,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               child: Text(
                 activeItem['subtitle'] as String,
                 key: ValueKey('sub_$_activeFeatureIndex'),
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                   color: accent,
@@ -590,7 +590,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               child: Text(
                 activeItem['description'] as String,
                 key: ValueKey('desc_$_activeFeatureIndex'),
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   height: 1.6,
                   color: isDark ? const Color(0xFFCBD5E1) : AppTheme.textBodyLight,
@@ -688,7 +688,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       child: Center(
                         child: Text(
                           "Sign In",
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
                             fontWeight: _authMode == 0 ? FontWeight.w800 : FontWeight.w600,
                             color: _authMode == 0
@@ -729,7 +729,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       child: Center(
                         child: Text(
                           "Create Account",
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
                             fontWeight: _authMode == 1 ? FontWeight.w800 : FontWeight.w600,
                             color: _authMode == 1
@@ -764,7 +764,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   Expanded(
                     child: Text(
                       _errorMessage!,
-                      style: GoogleFonts.comfortaa(fontSize: 11.5, color: AppTheme.signalVermilion),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: AppTheme.signalVermilion),
                     ),
                   ),
                 ],
@@ -787,7 +787,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   Expanded(
                     child: Text(
                       _successMessage!,
-                      style: GoogleFonts.comfortaa(fontSize: 11.5, color: const Color(0xFF10B981)),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF10B981)),
                     ),
                   ),
                 ],
@@ -831,7 +831,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               const SizedBox(width: 8),
               Text(
                 _isOperationsMode ? "Admin Operations Portal" : "Student Citizen Portal",
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
                   color: isDark ? Colors.white : AppTheme.textDisplayLight,
@@ -850,7 +850,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               ),
               child: Text(
                 _isOperationsMode ? "Switch to Student" : "Switch to Admin",
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFFF97316),
@@ -867,7 +867,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         _isOperationsMode
             ? "Authenticate institutional officer credentials for campus dispatch"
             : "Sign in to report infrastructure defects, track status, and upvote",
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 11,
           color: isDark ? const Color(0xFF8A94A6) : AppTheme.textMutedLight,
         ),
@@ -904,7 +904,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     const SizedBox(width: 10),
                     Text(
                       "Sign in with Google Workspace",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                         color: isDark ? Colors.white : AppTheme.textDisplayLight,
@@ -924,7 +924,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
               "OR VIA CREDENTIALS",
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 8.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.1,
@@ -942,7 +942,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       const SizedBox(height: 6),
       TextField(
         controller: _loginIdController,
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 13,
           color: isDark ? Colors.white : AppTheme.textDisplayLight,
         ),
@@ -960,7 +960,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       TextField(
         controller: _loginPasswordController,
         obscureText: !_showPassword,
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 13,
           color: isDark ? Colors.white : AppTheme.textDisplayLight,
         ),
@@ -996,7 +996,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           const SizedBox(width: 8),
           Text(
             "Keep me logged in on this device",
-            style: GoogleFonts.comfortaa(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
               color: isDark ? const Color(0xFFCBD5E1) : AppTheme.textBodyLight,
             ),
@@ -1025,7 +1025,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               )
             : Text(
                 _isOperationsMode ? "Authenticate Admin Console" : "Enter Citizen Portal",
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.3,
@@ -1040,7 +1040,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               icon: const Icon(Icons.school_rounded, size: 15, color: Color(0xFF2563EB)),
               label: Text(
                 "Quick Student",
-                style: GoogleFonts.comfortaa(fontSize: 11, fontWeight: FontWeight.w700),
+                style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700),
               ),
               onPressed: _isLoading ? null : _quickStudentLogin,
               style: OutlinedButton.styleFrom(
@@ -1056,7 +1056,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               icon: const Icon(Icons.admin_panel_settings_rounded, size: 15, color: Color(0xFFF97316)),
               label: Text(
                 "Quick Admin",
-                style: GoogleFonts.comfortaa(fontSize: 11, fontWeight: FontWeight.w700),
+                style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700),
               ),
               onPressed: _isLoading ? null : _quickAdminLogin,
               style: OutlinedButton.styleFrom(
@@ -1076,7 +1076,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     return [
       Text(
         "Register New Account",
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 15,
           fontWeight: FontWeight.w800,
           color: isDark ? Colors.white : AppTheme.textDisplayLight,
@@ -1085,7 +1085,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       const SizedBox(height: 4),
       Text(
         "Creates a permanent record in the institutional campus database",
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 11,
           color: isDark ? const Color(0xFF8A94A6) : AppTheme.textMutedLight,
         ),
@@ -1119,7 +1119,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 child: Center(
                   child: Text(
                     "🎓 Student / Citizen",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: _registerRole == 'student'
@@ -1153,7 +1153,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 child: Center(
                   child: Text(
                     "🛡️ Admin / Staff",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: _registerRole == 'admin'
@@ -1175,7 +1175,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       const SizedBox(height: 5),
       TextField(
         controller: _regFullNameController,
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 12.5,
           color: isDark ? Colors.white : AppTheme.textDisplayLight,
         ),
@@ -1193,7 +1193,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       const SizedBox(height: 5),
       TextField(
         controller: _regUsernameController,
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 12.5,
           color: isDark ? Colors.white : AppTheme.textDisplayLight,
         ),
@@ -1212,7 +1212,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       TextField(
         controller: _regEmailController,
         keyboardType: TextInputType.emailAddress,
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 12.5,
           color: isDark ? Colors.white : AppTheme.textDisplayLight,
         ),
@@ -1231,7 +1231,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       TextField(
         controller: _regPasswordController,
         obscureText: !_showRegPassword,
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 12.5,
           color: isDark ? Colors.white : AppTheme.textDisplayLight,
         ),
@@ -1258,7 +1258,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       TextField(
         controller: _regConfirmPasswordController,
         obscureText: !_showRegPassword,
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 12.5,
           color: isDark ? Colors.white : AppTheme.textDisplayLight,
         ),
@@ -1291,7 +1291,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               )
             : Text(
                 _registerRole == 'admin' ? "Register Admin Account" : "Register Student Account",
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.3,
@@ -1305,7 +1305,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   Widget _buildInputLabel(String label, bool isDark) {
     return Text(
       label,
-      style: GoogleFonts.comfortaa(
+      style: GoogleFonts.plusJakartaSans(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
@@ -1325,7 +1325,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
     return InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.comfortaa(
+      hintStyle: GoogleFonts.plusJakartaSans(
         fontSize: 12,
         color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
       ),

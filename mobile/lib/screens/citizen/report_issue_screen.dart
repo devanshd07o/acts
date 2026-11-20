@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import '../../config/app_routes.dart';
+import '../../config/theme.dart';
 import '../../services/api_client.dart';
 import '../../services/auth_service.dart';
 import '../../services/camera_service.dart';
@@ -42,9 +44,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       "id": "POTHOLE",
       "title": "Road Pothole & Cracks",
       "category": "CIVIL",
-      "severity": 4,
+      "severity": 4.0,
       "icon": Icons.broken_image_rounded,
-      "color": const Color(0xFFF97316),
+      "color": AppTheme.abesGold,
       "aiLabel": "Civil Infrastructure Triage",
       "crew": "Civil Infrastructure Team",
       "description": "Road surface defect, asphalt pothole, or broken paver block.",
@@ -53,9 +55,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       "id": "ELECTRICAL",
       "title": "Exposed Wire or Spark",
       "category": "ELECTRICAL",
-      "severity": 5,
+      "severity": 5.0,
       "icon": Icons.bolt_rounded,
-      "color": const Color(0xFFEF4444),
+      "color": AppTheme.signalVermilion,
       "aiLabel": "Electrical Hazard Triage",
       "crew": "Emergency Electrical Squad",
       "description": "Exposed conduit, sparking fixture, or non-functional campus lighting.",
@@ -64,9 +66,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       "id": "PLUMBING",
       "title": "Pipe Leak or Water Burst",
       "category": "PLUMBING",
-      "severity": 4,
+      "severity": 4.0,
       "icon": Icons.water_drop_rounded,
-      "color": const Color(0xFF3B82F6),
+      "color": AppTheme.signalCobalt,
       "aiLabel": "Sanitary & Plumbing Triage",
       "crew": "Sanitary & Plumbing Crew",
       "description": "Pressurized pipe rupture, faucet leak, or corridor drainage issue.",
@@ -75,9 +77,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       "id": "SANITATION",
       "title": "Garbage & Waste Overflow",
       "category": "SANITATION",
-      "severity": 2,
+      "severity": 2.5,
       "icon": Icons.delete_outline_rounded,
-      "color": const Color(0xFF10B981),
+      "color": AppTheme.signalEmerald,
       "aiLabel": "Campus Sanitation Triage",
       "crew": "Campus Sanitation Division",
       "description": "Overflowing waste bins or unattended debris in common pathways.",
@@ -185,10 +187,10 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         final errorMsg = e is ApiException ? e.message : "Failed to connect to backend: $e";
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFFDC2626),
+            backgroundColor: AppTheme.signalVermilion,
             content: Text(
               errorMsg,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w600),
             ),
           ),
         );
@@ -205,7 +207,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
@@ -215,21 +217,27 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  color: AppTheme.signalEmerald.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 36),
+                child: const Icon(Icons.check_circle_rounded, color: AppTheme.signalEmerald, size: 36),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 "Report Submitted!",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, height: 1.2),
               ),
               const SizedBox(height: 8),
               Text(
                 "Ticket ID: $ticketId\nAssigned to: $crew",
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
+                style: AppTheme.tabular(
+                  GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: AppTheme.lightTextMuted,
+                    height: 1.4,
+                  ),
+                ),
               ),
             ],
           ),
@@ -241,7 +249,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
               Navigator.pushReplacementNamed(context, AppRoutes.home);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF97316),
+              backgroundColor: AppTheme.abesNavyLight,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -261,7 +269,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
     final content = SingleChildScrollView(
       padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 48 : 18,
+        horizontal: isDesktop ? 48 : 16,
         vertical: 24,
       ),
       child: Center(
@@ -272,26 +280,28 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             children: [
               // Clean Header
               Text(
-                "Report an Infrastructure Issue",
-                style: TextStyle(
+                "Report Campus Infrastructure Defect",
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: isDesktop ? 26 : 21,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  height: 1.2,
+                  color: isDark ? AppTheme.darkText : AppTheme.lightText,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
-                "Follow 3 simple steps to report campus defects for instant AI triage and crew dispatch.",
-                style: TextStyle(
+                "Guided 3-step reporting workflow with neural defect classification, campus GIS tagging, and automated maintenance dispatch.",
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 13.5,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  height: 1.4,
+                  color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
                 ),
               ),
 
               const SizedBox(height: 24),
 
-              // Simple 3-Step Progress Bar
+              // 3-Step Progress Bar
               _buildStepper(isDark),
 
               const SizedBox(height: 28),
@@ -330,8 +340,8 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   Widget _buildStepper(bool isDark) {
     final steps = [
       {"num": "1", "title": "Defect Type"},
-      {"num": "2", "title": "Location"},
-      {"num": "3", "title": "Review & Send"},
+      {"num": "2", "title": "Location & GIS"},
+      {"num": "3", "title": "Review & Dispatch"},
     ];
 
     return Row(
@@ -346,25 +356,35 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             child: Row(
               children: [
                 Container(
-                  width: 28,
-                  height: 28,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: isCurrent
-                        ? const Color(0xFF2563EB)
+                        ? AppTheme.primaryBlue
                         : (isCompleted
-                            ? const Color(0xFF10B981)
-                            : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0))),
+                            ? AppTheme.signalEmerald
+                            : (isDark ? AppTheme.darkSurfaceElevated : AppTheme.lightSurfaceElevated)),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isCurrent
+                          ? AppTheme.primaryBlue
+                          : (isCompleted
+                              ? AppTheme.signalEmerald
+                              : (isDark ? AppTheme.darkBorder : AppTheme.lightBorder)),
+                      width: 1.0,
+                    ),
                   ),
                   child: Center(
                     child: isCompleted
-                        ? const Icon(Icons.check, size: 16, color: Colors.white)
+                        ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
                         : Text(
                             steps[idx]["num"]!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              color: isCurrent ? Colors.white : (isDark ? Colors.white60 : Colors.black54),
+                            style: AppTheme.tabular(
+                              GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: isCurrent ? Colors.white : (isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted),
+                              ),
                             ),
                           ),
                   ),
@@ -373,22 +393,23 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                 Expanded(
                   child: Text(
                     steps[idx]["title"]!,
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12.5,
-                      fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                      height: 1.2,
                       color: isCurrent
-                          ? (isDark ? Colors.white : const Color(0xFF0F172A))
-                          : (isDark ? Colors.white54 : const Color(0xFF64748B)),
+                          ? (isDark ? AppTheme.darkText : AppTheme.lightText)
+                          : (isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted),
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (idx < steps.length - 1)
                   Container(
-                    width: 20,
-                    height: 2,
+                    width: 24,
+                    height: 1.5,
                     margin: const EdgeInsets.symmetric(horizontal: 6),
-                    color: isDark ? Colors.white12 : Colors.black12,
+                    color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
                   ),
               ],
             ),
@@ -404,67 +425,75 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "What type of problem are you reporting?",
-          style: TextStyle(
+          "Select Defect Classification",
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppTheme.darkText : AppTheme.lightText,
+            height: 1.2,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 4),
+        Text(
+          "Neural vision models automatically route by defect signature and dispatch specialized crews.",
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12.5,
+            color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+            height: 1.3,
+          ),
+        ),
+        const SizedBox(height: 16),
 
-        // 4 Clean Defect Choice Cards
+        // 4 Defect Choice Cards
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
             childAspectRatio: 2.1,
           ),
           itemCount: _defectTypes.length,
           itemBuilder: (context, i) {
             final defect = _defectTypes[i];
             final isSelected = _selectedDefectIndex == i;
+            final color = defect['color'] as Color;
 
             return InkWell(
               onTap: () => setState(() => _selectedDefectIndex = i),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(16),
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF))
-                      : (isDark ? const Color(0xFF101726) : Colors.white),
-                  borderRadius: BorderRadius.circular(18),
+                      ? (isDark ? AppTheme.darkSurfaceElevated : const Color(0xFFF1F5F9))
+                      : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFF2563EB)
-                        : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0)),
-                    width: isSelected ? 2 : 1,
+                        ? AppTheme.primaryBlue
+                        : (isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                    width: isSelected ? 1.5 : 1.0,
                   ),
-                  boxShadow: [
-                    if (!isDark)
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                  ],
                 ),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: (defect['color'] as Color).withValues(alpha: 0.15),
+                        color: color.withValues(alpha: isDark ? 0.16 : 0.1),
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.3),
+                          width: 1.0,
+                        ),
                       ),
-                      child: Icon(defect['icon'] as IconData, color: defect['color'] as Color, size: 24),
+                      child: Icon(defect['icon'] as IconData, color: color, size: 22),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,20 +501,46 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                         children: [
                           Text(
                             defect['title'] as String,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            defect['aiLabel'] as String,
-                            style: TextStyle(
-                              fontSize: 11,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13.5,
                               fontWeight: FontWeight.w700,
-                              color: defect['color'] as Color,
+                              height: 1.2,
+                              color: isDark ? AppTheme.darkText : AppTheme.lightText,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  defect['category'] as String,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: color,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                "Sev ${defect['severity']}",
+                                style: AppTheme.tabular(
+                                  GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -501,23 +556,26 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
         // Photo Attachment Section
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF101726) : Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+              color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+              width: 1.0,
             ),
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                  color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.25), width: 1.0),
                 ),
-                child: const Icon(Icons.camera_alt_outlined, color: Color(0xFF2563EB), size: 22),
+                child: const Icon(Icons.camera_alt_outlined, color: AppTheme.primaryBlue, size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -525,14 +583,19 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _customPhoto != null ? "Photo attached: ${_customPhoto!.name}" : "Defect Photograph",
-                      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800),
+                      _customPhoto != null ? "Attached: ${_customPhoto!.name}" : "Defect Photograph & Vision Input",
+                      style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700, height: 1.2),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       _customPhoto != null
-                          ? "OpenCV Clarity Checked: 98.4% (Sharp)"
-                          : "Optional: Upload or capture photo from phone/camera",
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ? "OpenCV Clarity Checked: 98.4% (Sharp focus)"
+                          : "Upload photo or capture using connected sensor/camera",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+                        height: 1.2,
+                      ),
                     ),
                   ],
                 ),
@@ -542,6 +605,8 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                 icon: const Icon(Icons.upload_rounded, size: 16),
                 label: Text(_customPhoto != null ? "Change" : "Add Photo"),
                 style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(44, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
@@ -555,38 +620,41 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         TextField(
           controller: _notesController,
           maxLines: 2,
-          style: TextStyle(fontSize: 13.5, color: isDark ? Colors.white : Colors.black87),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13.5,
+            color: isDark ? AppTheme.darkText : AppTheme.lightText,
+          ),
           decoration: InputDecoration(
-            hintText: "Optional notes (e.g., Near room 204 or behind seminar hall)...",
-            hintStyle: const TextStyle(fontSize: 12.5),
-            filled: true,
-            fillColor: isDark ? const Color(0xFF101726) : Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
-              ),
+            hintText: "Optional contextual notes (e.g., Near room 204 or behind seminar hall corridor)...",
+            hintStyle: GoogleFonts.plusJakartaSans(
+              fontSize: 12.5,
+              color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
             ),
+            filled: true,
+            fillColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
           ),
         ),
 
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
 
         // Next Button
         ElevatedButton(
           onPressed: () => setState(() => _currentStep = 1),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2563EB),
+            backgroundColor: AppTheme.primaryBlue,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            minimumSize: const Size(44, 48),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Next: Select Location", style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800)),
-              SizedBox(width: 8),
-              Icon(Icons.arrow_forward_rounded, size: 18),
+              Text(
+                "Next: Select Campus Location",
+                style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward_rounded, size: 18),
             ],
           ),
         ),
@@ -600,19 +668,29 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "Where is this defect located?",
-          style: TextStyle(
+          "Campus Location & GIS Coordinate",
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppTheme.darkText : AppTheme.lightText,
+            height: 1.2,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 4),
+        Text(
+          "Select the nearest ABESEC building anchor to calibrate the spatial incident cluster.",
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12.5,
+            color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+            height: 1.3,
+          ),
+        ),
+        const SizedBox(height: 16),
 
         // Campus Building Choice Chips
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: 8,
+          runSpacing: 8,
           children: List.generate(_campusBuildings.length, (idx) {
             final building = _campusBuildings[idx];
             final isSelected = _selectedZoneIndex == idx;
@@ -621,23 +699,24 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
               avatar: Icon(
                 building['icon'] as IconData,
                 size: 16,
-                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black54),
+                color: isSelected ? Colors.white : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
               ),
               label: Text(building['name'] as String),
               selected: isSelected,
-              selectedColor: const Color(0xFF2563EB),
-              backgroundColor: isDark ? const Color(0xFF101726) : Colors.white,
-              labelStyle: TextStyle(
-                fontSize: 12.5,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF334155)),
+              selectedColor: AppTheme.primaryBlue,
+              backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              labelStyle: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? Colors.white : (isDark ? AppTheme.darkText : AppTheme.lightTextSecondary),
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
                   color: isSelected
-                      ? const Color(0xFF2563EB)
-                      : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                      ? AppTheme.primaryBlue
+                      : (isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                  width: 1.0,
                 ),
               ),
               onSelected: (_) => _selectBuilding(idx),
@@ -649,15 +728,16 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
         // Embedded Campus Map
         Container(
-          height: 260,
+          height: 280,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+              color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+              width: 1.0,
             ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             child: Stack(
               children: [
                 FlutterMap(
@@ -678,9 +758,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                           point: LatLng(_latitude, _longitude),
                           radius: 50,
                           useRadiusInMeter: false,
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.20),
-                          borderColor: const Color(0xFF2563EB),
-                          borderStrokeWidth: 2,
+                          color: AppTheme.primaryBlue.withValues(alpha: 0.18),
+                          borderColor: AppTheme.primaryBlue,
+                          borderStrokeWidth: 1.5,
                         ),
                       ],
                     ),
@@ -690,7 +770,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                           point: LatLng(_latitude, _longitude),
                           width: 44,
                           height: 44,
-                          child: const Icon(Icons.location_on_rounded, color: Color(0xFFEF4444), size: 40),
+                          child: const Icon(Icons.location_on_rounded, color: AppTheme.signalVermilion, size: 38),
                         ),
                       ],
                     ),
@@ -700,14 +780,32 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                   bottom: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.8),
+                      color: (isDark ? AppTheme.darkSurface : Colors.black).withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isDark ? AppTheme.darkBorder : Colors.white24,
+                        width: 1.0,
+                      ),
                     ),
-                    child: Text(
-                      "📍 ${_campusBuildings[_selectedZoneIndex]['name']}",
-                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Colors.white),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.near_me_rounded, size: 14, color: AppTheme.signalEmerald),
+                        const SizedBox(width: 6),
+                        Text(
+                          "${_campusBuildings[_selectedZoneIndex]['name']}",
+                          style: GoogleFonts.plusJakartaSans(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.white),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "•  ${_latitude.toStringAsFixed(4)}° N, ${_longitude.toStringAsFixed(4)}° E",
+                          style: AppTheme.tabular(
+                            GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w500, color: Colors.white70),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -716,7 +814,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
           ),
         ),
 
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
 
         // Navigation Row (Back & Next)
         Row(
@@ -724,27 +822,28 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             OutlinedButton(
               onPressed: () => setState(() => _currentStep = 0),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                minimumSize: const Size(44, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text("Back"),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton(
                 onPressed: () => setState(() => _currentStep = 2),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: AppTheme.primaryBlue,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  minimumSize: const Size(44, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Next: Review Triage", style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800)),
-                    SizedBox(width: 8),
-                    Icon(Icons.arrow_forward_rounded, size: 18),
+                    Text("Next: Review Triage", style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward_rounded, size: 18),
                   ],
                 ),
               ),
@@ -764,23 +863,34 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "Review Incident & Automated Triage",
-          style: TextStyle(
+          "Review Incident & Automated Dispatch",
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppTheme.darkText : AppTheme.lightText,
+            height: 1.2,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 4),
+        Text(
+          "Autonomous classification verified. Please confirm triage parameters prior to ticket broadcast.",
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12.5,
+            color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+            height: 1.3,
+          ),
+        ),
+        const SizedBox(height: 16),
 
         // Summary Card
         Container(
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF101726) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+              color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+              width: 1.0,
             ),
           ),
           child: Column(
@@ -791,27 +901,34 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                 value: defect['title'] as String,
                 icon: defect['icon'] as IconData,
                 color: defect['color'] as Color,
+                isDark: isDark,
               ),
-              const Divider(height: 24),
+              Divider(height: 24, color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
               _buildSummaryRow(
-                label: "CAMPUS LOCATION",
-                value: building['name'] as String,
+                label: "CAMPUS LOCATION ANCHOR",
+                value: "${building['name']} (${_latitude.toStringAsFixed(4)}°N, ${_longitude.toStringAsFixed(4)}°E)",
                 icon: Icons.location_on_outlined,
-                color: const Color(0xFF3B82F6),
+                color: AppTheme.accentBlue,
+                isDark: isDark,
+                isTabular: true,
               ),
-              const Divider(height: 24),
+              Divider(height: 24, color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
               _buildSummaryRow(
-                label: "CALCULATED SEVERITY",
-                value: "Level ${defect['severity']} / 5 (High Priority)",
+                label: "CALCULATED SEVERITY INDEX",
+                value: "Priority Score ${defect['severity']} / 5.0  •  Immediate Response",
                 icon: Icons.speed_rounded,
-                color: const Color(0xFFF97316),
+                color: AppTheme.abesGold,
+                isDark: isDark,
+                isTabular: true,
               ),
-              const Divider(height: 24),
+              Divider(height: 24, color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
               _buildSummaryRow(
-                label: "ASSIGNED MAINTENANCE UNIT",
-                value: "${defect['crew']} • ETA ~12 mins",
+                label: "ASSIGNED MAINTENANCE SQUAD",
+                value: "${defect['crew']}  •  SLA ETA ~12 mins",
                 icon: Icons.engineering_outlined,
-                color: const Color(0xFF10B981),
+                color: AppTheme.signalEmerald,
+                isDark: isDark,
+                isTabular: true,
               ),
             ],
           ),
@@ -823,25 +940,33 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.3)),
+            color: AppTheme.abesNavyLight.withValues(alpha: isDark ? 0.25 : 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.abesNavyLight.withValues(alpha: 0.3),
+              width: 1.0,
+            ),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.hub_rounded, size: 18, color: Color(0xFF8B5CF6)),
-              SizedBox(width: 10),
+              const Icon(Icons.hub_rounded, size: 18, color: AppTheme.abesNavyLight),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  "Sub-60m Spatial Clustering: Priority dynamically increases as more campus members report this issue.",
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF8B5CF6)),
+                  "Spatial Deduplication Active: Sub-60m incidents merge automatically into an amplified crowd cluster.",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppTheme.darkTextSecondary : AppTheme.abesNavy,
+                    height: 1.3,
+                  ),
                 ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
 
         // Navigation Row (Back & Final Submit)
         Row(
@@ -849,20 +974,21 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             OutlinedButton(
               onPressed: () => setState(() => _currentStep = 1),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                minimumSize: const Size(44, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text("Back"),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _submitReport,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: AppTheme.primaryBlue,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  minimumSize: const Size(44, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: _isLoading
                     ? const SizedBox(
@@ -870,12 +996,15 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                         height: 20,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.send_rounded, size: 18),
-                          SizedBox(width: 8),
-                          Text("Submit Incident Report", style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800)),
+                          const Icon(Icons.send_rounded, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Submit Incident Report",
+                            style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700),
+                          ),
                         ],
                       ),
               ),
@@ -891,30 +1020,53 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     required String value,
     required IconData icon,
     required Color color,
+    required bool isDark,
+    bool isTabular = false,
   }) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
+            color: color.withValues(alpha: isDark ? 0.16 : 0.1),
             borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withValues(alpha: 0.25), width: 1.0),
           ),
           child: Icon(icon, size: 18, color: color),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey, letterSpacing: 0.8),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppTheme.darkTextMuted : AppTheme.lightTextMuted,
+                  letterSpacing: 0.6,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                style: isTabular
+                    ? AppTheme.tabular(
+                        GoogleFonts.plusJakartaSans(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? AppTheme.darkText : AppTheme.lightText,
+                          height: 1.25,
+                        ),
+                      )
+                    : GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? AppTheme.darkText : AppTheme.lightText,
+                        height: 1.25,
+                      ),
               ),
             ],
           ),

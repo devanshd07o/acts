@@ -119,7 +119,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                           const SizedBox(width: 8),
                           Text(
                             "Settings",
-                            style: GoogleFonts.comfortaa(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -201,7 +201,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                             children: [
                               Text(
                                 _getTabTitle(_selectedTabIndex),
-                                style: GoogleFonts.comfortaa(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
                                   color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -210,7 +210,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                               const SizedBox(height: 2),
                               Text(
                                 _getTabSubtitle(_selectedTabIndex),
-                                style: GoogleFonts.comfortaa(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 11,
                                   color: isDark ? const Color(0xFF8A94A6) : AppTheme.textMutedLight,
                                 ),
@@ -243,7 +243,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                             const SizedBox(width: 8),
                             Text(
                               _savedBanner!,
-                              style: GoogleFonts.comfortaa(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
                                 color: const Color(0xFF10B981),
@@ -302,7 +302,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
             const SizedBox(width: 10),
             Text(
               label,
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected
@@ -362,7 +362,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
               children: [
                 Text(
                   displayName,
-                  style: GoogleFonts.comfortaa(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w800,
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -372,7 +372,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 ),
                 Text(
                   email,
-                  style: GoogleFonts.comfortaa(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w600,
                     color: isDark ? const Color(0xFF8A94A6) : AppTheme.textMutedLight,
@@ -591,7 +591,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
             ElevatedButton.icon(
               onPressed: _saveAiKeys,
               icon: const Icon(Icons.check_rounded, size: 14),
-              label: Text("Save Credentials", style: GoogleFonts.comfortaa(fontSize: 11, fontWeight: FontWeight.w700)),
+              label: Text("Save Credentials", style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF97316),
                 foregroundColor: Colors.white,
@@ -612,10 +612,10 @@ class _SettingsDialogState extends State<SettingsDialog> {
             child: TextField(
               controller: _geminiKeyController,
               obscureText: _obscureGemini,
-              style: GoogleFonts.comfortaa(fontSize: 11.5, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+              style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: isDark ? Colors.white : const Color(0xFF0F172A)),
               decoration: InputDecoration(
                 hintText: "AIzaSy...",
-                hintStyle: GoogleFonts.comfortaa(fontSize: 11, color: isDark ? Colors.white38 : Colors.black38),
+                hintStyle: GoogleFonts.plusJakartaSans(fontSize: 11, color: isDark ? Colors.white38 : Colors.black38),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -644,10 +644,10 @@ class _SettingsDialogState extends State<SettingsDialog> {
             child: TextField(
               controller: _groqKeyController,
               obscureText: _obscureGroq,
-              style: GoogleFonts.comfortaa(fontSize: 11.5, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+              style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: isDark ? Colors.white : const Color(0xFF0F172A)),
               decoration: InputDecoration(
                 hintText: "gsk_...",
-                hintStyle: GoogleFonts.comfortaa(fontSize: 11, color: isDark ? Colors.white38 : Colors.black38),
+                hintStyle: GoogleFonts.plusJakartaSans(fontSize: 11, color: isDark ? Colors.white38 : Colors.black38),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -690,7 +690,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
             ),
             child: Text(
               "Active & Calibrated",
-              style: GoogleFonts.comfortaa(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF10B981)),
+              style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF10B981)),
             ),
           ),
         ),
@@ -708,7 +708,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
             ),
             child: Text(
               "Daemon Synced",
-              style: GoogleFonts.comfortaa(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF2563EB)),
+              style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF2563EB)),
             ),
           ),
         ),
@@ -732,7 +732,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
           description: "Version 2.4.0-Production (Build Windows x64 Native). ABES Engineering College.",
           trailing: Text(
             "v2.4.0-Prod",
-            style: GoogleFonts.comfortaa(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFFF97316)),
+            style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFFF97316)),
           ),
         ),
         const SizedBox(height: 12),
@@ -751,7 +751,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
   Widget _buildSectionGroupTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.comfortaa(
+      style: GoogleFonts.plusJakartaSans(
         fontSize: 10,
         fontWeight: FontWeight.w800,
         letterSpacing: 1.1,
@@ -782,7 +782,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.comfortaa(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -791,7 +791,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: GoogleFonts.comfortaa(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 10.5,
                     height: 1.4,
                     color: isDark ? const Color(0xFF8A94A6) : AppTheme.textMutedLight,
@@ -841,7 +841,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
             ],
             Text(
               label,
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected

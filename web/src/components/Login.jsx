@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import MobileLayout from './MobileLayout';
-import { useRole } from '../context/RoleContext';
 import { useNavigate } from 'react-router-dom';
-import { User, ShieldCheck } from 'lucide-react';
+import { useRole } from '../context/RoleContext';
+import { Shield, ShieldCheck, User, Lock, Eye, EyeOff, Radio, Activity } from 'lucide-react';
 import { fetchClient } from '../api/client';
 
 const Login = () => {
@@ -10,6 +9,7 @@ const Login = () => {
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -33,47 +33,105 @@ const Login = () => {
             login(role);
             navigate(role === 'admin' ? '/admin/dashboard' : '/report');
         } catch (err) {
-            setError('Invalid credentials');
+            setError(err.message || 'Invalid operator credentials');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <MobileLayout title="ACTS" headerClass="bg-[#263238]" showNav={false}>
-            <div className="p-6 flex flex-col items-center justify-center h-full bg-white text-center">
-                <h1 className="text-3xl font-black text-[#263238] mb-2 tracking-tight">ACTS</h1>
-                <p className="text-[#546e7a] text-sm mb-10 font-medium">Automated Civic Tracking System</p>
+        <div className="min-h-screen w-full bg-[var(--bg-canvas)] text-[var(--text-primary)] flex flex-col justify-center items-center p-4 sm:p-6">
+            {/* Background pattern */}
+            <div className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl shadow-command p-6 sm:p-8 space-y-6">
+                {/* Brand Header */}
+                <div className="text-center space-y-2">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 mb-2 shadow-xs">
+                        <Shield size={24} />
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                        <span className="font-mono text-sm font-bold tracking-wider text-sky-400">ACTS // CENTRAL GATEWAY</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    </div>
+                    <p className="text-xs text-[var(--text-dim)] font-mono">
+                        Automated Civic Tracking & Incident Triage System
+                    </p>
+                    <p className="text-[10px] text-[var(--text-dim)] font-mono uppercase tracking-wider">
+                        ABESEC Institutional Operations
+                    </p>
+                </div>
 
-                {error && <div className="text-red-500 mb-4 font-bold text-sm">{error}</div>}
+                {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl text-xs font-mono text-center">
+                        {error}
+                    </div>
+                )}
 
-                <form onSubmit={handleLogin} className="w-full max-w-xs flex flex-col gap-4">
-                    <input
-                        type="text"
-                        placeholder="Username"
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-acts-citizen transition-colors"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-acts-citizen transition-colors"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
+                {/* Form */}
+                <form onSubmit={handleLogin} className="space-y-4">
+                    <div>
+                        <label className="block text-[11px] font-mono font-medium text-[var(--text-muted)] uppercase mb-1.5">
+                            Operator Username / Identity
+                        </label>
+                        <div className="relative">
+                            <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
+                            <input
+                                type="text"
+                                placeholder="e.g. admin or roll number"
+                                className="w-full min-h-[44px] pl-10 pr-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-medium)] rounded-xl outline-none focus:border-sky-500 text-base sm:text-xs font-medium text-[var(--text-primary)] placeholder:text-[var(--text-dim)] color-transition"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-[11px] font-mono font-medium text-[var(--text-muted)] uppercase mb-1.5">
+                            Access Security Key
+                        </label>
+                        <div className="relative">
+                            <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                className="w-full min-h-[44px] pl-10 pr-12 py-2.5 bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-medium)] rounded-xl outline-none focus:border-sky-500 text-base sm:text-xs font-medium text-[var(--text-primary)] placeholder:text-[var(--text-dim)] color-transition"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-primary)]"
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
+                    </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-acts-citizen text-white font-bold text-lg p-4 rounded-xl mt-2 flex items-center justify-center disabled:opacity-50"
+                        className="w-full min-h-[48px] bg-sky-600 hover:bg-sky-500 text-white font-mono font-bold text-xs py-3 rounded-xl color-transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                     >
-                        {loading ? 'Logging in...' : 'Log In'}
+                        {loading ? (
+                            <>
+                                <span className="inline-block animate-spin">⟳</span>
+                                <span>AUTHENTICATING...</span>
+                            </>
+                        ) : (
+                            <span>SIGN IN TO CONSOLE</span>
+                        )}
                     </button>
+                </form>
 
-                    <div className="flex gap-2 mt-2 w-full">
+                {/* Instant Demo Sandbox Access */}
+                <div className="pt-4 border-t border-[var(--border-subtle)] space-y-2.5">
+                    <p className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-wider text-center">
+                        Evaluation Credentials Quick-Select
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
                         <button
                             type="button"
                             onClick={() => {
@@ -83,9 +141,11 @@ const Login = () => {
                                 login('admin');
                                 navigate('/admin/dashboard');
                             }}
-                            className="flex-1 py-2.5 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
+                            className="p-2.5 bg-[var(--bg-card)] hover:bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] hover:border-sky-500/40 rounded-xl text-xs font-mono font-semibold color-transition flex flex-col items-center gap-1 text-center"
                         >
-                            <ShieldCheck size={14} /> Quick Admin
+                            <ShieldCheck size={16} className="text-sky-400" />
+                            <span>Admin Triage</span>
+                            <span className="text-[9px] text-[var(--text-dim)]">Command Center</span>
                         </button>
                         <button
                             type="button"
@@ -96,14 +156,21 @@ const Login = () => {
                                 login('citizen');
                                 navigate('/report');
                             }}
-                            className="flex-1 py-2.5 px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
+                            className="p-2.5 bg-[var(--bg-card)] hover:bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] hover:border-emerald-500/40 rounded-xl text-xs font-mono font-semibold color-transition flex flex-col items-center gap-1 text-center"
                         >
-                            <User size={14} /> Quick Student
+                            <User size={16} className="text-emerald-400" />
+                            <span>Student Reporter</span>
+                            <span className="text-[9px] text-[var(--text-dim)]">Civic Reporting</span>
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
-        </MobileLayout>
+
+            {/* Footer */}
+            <div className="mt-6 text-center text-[10px] font-mono text-[var(--text-dim)]">
+                ABESEC ACTS Triage Infrastructure • Node ID: DLH-CAMPUS-01
+            </div>
+        </div>
     );
 };
 

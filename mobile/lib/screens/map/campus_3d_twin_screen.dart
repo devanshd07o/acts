@@ -114,7 +114,7 @@ class _Campus3DTwinScreenState extends State<Campus3DTwinScreen> {
             const SizedBox(height: 16),
             Text(
               "Loading ABESEC 3D Campus Digital Twin...",
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white70 : const Color(0xFF334155),
@@ -167,7 +167,7 @@ class _Campus3DTwinScreenState extends State<Campus3DTwinScreen> {
             const SizedBox(height: 16),
             Text(
               "ABESEC 3D Digital Twin Active",
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -177,7 +177,7 @@ class _Campus3DTwinScreenState extends State<Campus3DTwinScreen> {
             Text(
               "Full 3D Campus Scene running live on http://127.0.0.1:5173/ with real photo-verified Bhabha, Aryabhata colonnades, entrance arch & issue clusters.",
               textAlign: TextAlign.center,
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 11.5,
                 color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                 height: 1.5,
@@ -189,7 +189,7 @@ class _Campus3DTwinScreenState extends State<Campus3DTwinScreen> {
               icon: const Icon(Icons.open_in_new_rounded, size: 16),
               label: Text(
                 "Launch 3D Campus in Browser Window",
-                style: GoogleFonts.comfortaa(fontWeight: FontWeight.w700, fontSize: 12),
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 12),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF97316),
@@ -233,7 +233,7 @@ class _Campus3DTwinScreenState extends State<Campus3DTwinScreen> {
             const SizedBox(width: 8),
             Text(
               "Return to App",
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),

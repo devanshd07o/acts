@@ -126,7 +126,7 @@ class _NewQueryViewState extends State<NewQueryView> {
               Expanded(
                 child: Text(
                   "Upvoted existing incident! Crowd urgency boosted.",
-                  style: GoogleFonts.comfortaa(fontWeight: FontWeight.w700),
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -139,7 +139,7 @@ class _NewQueryViewState extends State<NewQueryView> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: const Color(0xFFDC2626),
-          content: Text("Failed to upvote: $e", style: GoogleFonts.comfortaa()),
+          content: Text("Failed to upvote: $e", style: GoogleFonts.plusJakartaSans()),
         ),
       );
     } finally {
@@ -252,7 +252,7 @@ class _NewQueryViewState extends State<NewQueryView> {
           backgroundColor: const Color(0xFFDC2626),
           content: Text(
             "Please provide a defect photograph or describe the issue in notes.",
-            style: GoogleFonts.comfortaa(fontWeight: FontWeight.w600),
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
           ),
         ),
       );
@@ -302,7 +302,7 @@ class _NewQueryViewState extends State<NewQueryView> {
               Expanded(
                 child: Text(
                   "Issue dispatched successfully! Tracking in My Active Reports.",
-                  style: GoogleFonts.comfortaa(fontWeight: FontWeight.w700),
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -318,7 +318,7 @@ class _NewQueryViewState extends State<NewQueryView> {
             backgroundColor: const Color(0xFFDC2626),
             content: Text(
               "Submission error: $e",
-              style: GoogleFonts.comfortaa(fontWeight: FontWeight.w600),
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
             ),
           ),
         );
@@ -367,7 +367,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                         borderRadius: BorderRadius.circular(6),
                         child: Text(
                           "Home",
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: const Color(0xFFF97316),
@@ -385,7 +385,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                       const SizedBox(width: 6),
                       Text(
                         "New Infrastructure Query",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: isDark ? Colors.white70 : const Color(0xFF475569),
@@ -396,7 +396,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                   const SizedBox(height: 6),
                   Text(
                     "Submit Campus Infrastructure Query",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -409,7 +409,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                 icon: const Icon(Icons.arrow_back_rounded, size: 16),
                 label: Text(
                   "Back to Overview",
-                  style: GoogleFonts.comfortaa(fontSize: 11.5, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 11.5, fontWeight: FontWeight.w700),
                 ),
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: borderColor),
@@ -518,7 +518,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                         children: [
                           Text(
                             "1. Defect Photograph",
-                            style: GoogleFonts.comfortaa(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -533,7 +533,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                             ),
                             child: Text(
                               "PRIMARY EVIDENCE",
-                              style: GoogleFonts.comfortaa(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
                                 color: const Color(0xFFF97316),
@@ -544,7 +544,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                       ),
                       Text(
                         "Upload high-resolution image of the fault for computer vision analysis",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                         ),
@@ -559,7 +559,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                   icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)),
                   label: Text(
                     "Remove",
-                    style: GoogleFonts.comfortaa(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFFEF4444),
@@ -604,7 +604,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                     const SizedBox(height: 12),
                     Text(
                       "Click to Select or Drop Photograph",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -613,7 +613,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                     const SizedBox(height: 4),
                     Text(
                       "Supports JPEG, PNG • Instant camera defect analysis",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                       ),
@@ -659,7 +659,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                               const SizedBox(width: 8),
                               Text(
                                 "Evidence Photo Attached (${(_imageBytes!.length / 1024).toStringAsFixed(0)} KB)",
-                                style: GoogleFonts.comfortaa(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white,
@@ -672,7 +672,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                             icon: const Icon(Icons.refresh_rounded, size: 14),
                             label: Text(
                               "Change Photo",
-                              style: GoogleFonts.comfortaa(fontSize: 11, fontWeight: FontWeight.w700),
+                              style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white24,
@@ -730,7 +730,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                     children: [
                       Text(
                         "2. Context Notes & Details",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
                           color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -738,7 +738,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                       ),
                       Text(
                         "Provide any context or symptoms (AI extracts hazard signals to auto-route squad)",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                         ),
@@ -779,7 +779,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                       const SizedBox(width: 6),
                       Text(
                         _isVoiceRecording ? "Listening..." : "Voice Input",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: _isVoiceRecording
@@ -824,7 +824,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                           const SizedBox(width: 8),
                           Text(
                             "Audio Dictation Active — Speak or tap quick phrase below",
-                            style: GoogleFonts.comfortaa(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: const Color(0xFFEF4444),
@@ -836,7 +836,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                         onTap: () => setState(() => _isVoiceRecording = false),
                         child: Text(
                           "Done",
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFFEF4444),
@@ -869,7 +869,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                           ),
                           child: Text(
                             phrase,
-                            style: GoogleFonts.comfortaa(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: isDark ? Colors.white70 : const Color(0xFF334155),
@@ -894,14 +894,14 @@ class _NewQueryViewState extends State<NewQueryView> {
               controller: _notesController,
               onChanged: _onNotesChanged,
               maxLines: 3,
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12.5,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
               decoration: InputDecoration(
                 hintText:
                     "e.g., Water is leaking from the ceiling onto the 2nd-floor lab corridor, or exposed sparking cable near entrance...",
-                hintStyle: GoogleFonts.comfortaa(
+                hintStyle: GoogleFonts.plusJakartaSans(
                   fontSize: 11.5,
                   color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                 ),
@@ -957,7 +957,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                     children: [
                       Text(
                         "3. Autonomous AI Diagnosis & Priority Triage",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
                           color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -965,7 +965,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                       ),
                       Text(
                         "Synthesized classification, severity scaling, and hazard gap resolution",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           color: isDark ? const Color(0xFF8A94A6) : const Color(0xFF64748B),
                         ),
@@ -1021,7 +1021,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                       children: [
                         Text(
                           analysis.defectName,
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
                             color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -1030,7 +1030,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                         const SizedBox(height: 2),
                         Text(
                           "Category: ${analysis.category} • Target Dispatch: ${analysis.requiredCrew} (${analysis.estimatedResolutionMinutes}m SLA)",
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 10.5,
                             color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
                           ),
@@ -1058,7 +1058,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                     Expanded(
                       child: Text(
                         analysis.hazardWarning,
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFFDC2626),
@@ -1075,7 +1075,7 @@ class _NewQueryViewState extends State<NewQueryView> {
             // 3-4 GAP-FILLING QUESTIONS
             Text(
               "QUICK CLARIFICATIONS (FILL CONTEXT GAPS)",
-              style: GoogleFonts.comfortaa(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.1,
@@ -1101,7 +1101,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                     Expanded(
                       child: Text(
                         question,
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,
                           color: isDark ? Colors.white : const Color(0xFF1E293B),
@@ -1133,7 +1133,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                               ),
                               child: Text(
                                 choice,
-                                style: GoogleFonts.comfortaa(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 10.5,
                                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                                   color: isSelected
@@ -1169,7 +1169,7 @@ class _NewQueryViewState extends State<NewQueryView> {
           ),
           child: Text(
             "Cancel",
-            style: GoogleFonts.comfortaa(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
             ),
@@ -1187,7 +1187,7 @@ class _NewQueryViewState extends State<NewQueryView> {
               : const Icon(Icons.send_rounded, size: 16),
           label: Text(
             _isSubmitting ? "Dispatched..." : "Dispatch Infrastructure Report",
-            style: GoogleFonts.comfortaa(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.3,
@@ -1247,7 +1247,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                   children: [
                     Text(
                       "Duplicate Prevention: Active Defect Detected Here",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
                         color: isDark ? Colors.white : const Color(0xFF1E3A8A),
@@ -1255,7 +1255,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                     ),
                     Text(
                       "An active defect is already under remediation in $zoneDisplay${_activeBlockComplaints.length > 1 ? ' (${_activeBlockComplaints.length} active issues)' : ''}",
-                      style: GoogleFonts.comfortaa(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB),
                       ),
@@ -1331,7 +1331,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                       : const Icon(Icons.thumb_up_alt_rounded, size: 18),
                   label: Text(
                     _isUpvoting ? "Upvoting..." : "Upvote Existing (+1 Urgency Boost)",
-                    style: GoogleFonts.comfortaa(fontWeight: FontWeight.w800, fontSize: 12),
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 12),
                   ),
                 ),
               ),
@@ -1344,7 +1344,7 @@ class _NewQueryViewState extends State<NewQueryView> {
                 ),
                 child: Text(
                   "Report Different Defect",
-                  style: GoogleFonts.comfortaa(fontWeight: FontWeight.w700, fontSize: 11.5),
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11.5),
                 ),
               ),
             ],

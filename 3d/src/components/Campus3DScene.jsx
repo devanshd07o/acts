@@ -1493,6 +1493,13 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
     <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 1 }}>
       <div ref={mountRef} className="absolute inset-0" />
 
+      {/* First-Person Precision HUD Crosshair */}
+      {cameraMode === 'firstperson' && (
+        <div className="hud-crosshair pointer-events-none">
+          <div className="hud-crosshair-dot" />
+        </div>
+      )}
+
       {/* Screen-space Floating 3D Building Labels with Smart Decluttering */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 10 }}>
         {CAMPUS_BLOCKS.filter(b => b.id !== 'gate').map(block => {
@@ -1508,22 +1515,22 @@ export default function Campus3DScene({ clusters, onBuildingClick, cameraMode })
               style={{ opacity: 0, willChange: 'transform' }}
             >
               {qCount > 0 ? (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md shadow-md border border-slate-200/90 group-hover:scale-105 group-hover:shadow-xl transition-all">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: block.accentColor }} />
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md shadow-xs border border-slate-200/90 group-hover:scale-105 transition-transform duration-150">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: block.accentColor }} />
                   <span className="text-[11px] font-bold text-slate-800 whitespace-nowrap">{block.shortName}</span>
                   <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline max-w-[120px] truncate">
                     {block.name.split(' ')[0]}
                   </span>
                   <span
-                    className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold text-white shadow-sm flex items-center justify-center min-w-[16px]"
+                    className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold text-white shadow-xs flex items-center justify-center min-w-[16px] tabular-nums"
                     style={{ background: heat?.color || '#0ea5e9' }}
                   >
                     {qCount}
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center justify-center px-1.5 py-0.5 rounded-full bg-white/85 backdrop-blur-md shadow-sm border border-slate-200/80 group-hover:px-2.5 group-hover:scale-105 group-hover:shadow-md transition-all">
-                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: block.accentColor }} />
+                <div className="flex items-center justify-center px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-md shadow-xs border border-slate-200/80 group-hover:scale-105 transition-transform duration-150">
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: block.accentColor }} />
                   <span className="ml-1 text-[10px] font-semibold text-slate-600 whitespace-nowrap">{block.shortName}</span>
                 </div>
               )}
